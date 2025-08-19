@@ -4,8 +4,10 @@
 #define maxLinha 10 // quantidade de linhas do tabuleiro
 #define maxColuna 10 // quantidade de colunas do tabuleiro
 #define qtdTiposNavios 3 // quantidade de tipos de navios diferentes no jogo
-int navio[qtdTiposNavios] = {1, 3, 5}; // vetor de navios, onde cada numero representa seu tamanho
-char tabuleiro[maxLinha][maxColuna];
+#define qtdNaviosAtivos 5 // quantidade de navios presentes no tabuleiro
+int tiposNavio[qtdTiposNavios] = {1,3,5}; // vetor de navios, onde cada numero representa seu tamanho
+int tabNavios[maxLinha][maxColuna]; // guarda a informação de onde estão os navios | 0 - não tem | 1 - escondido | 2 - encontrado
+char tabuleiro[maxLinha][maxColuna]; // matriz do tabuleiro que será mostrada na tela
 
 void inicializarTabuleiro (){
     for(int i=0; i<maxLinha; i++){
@@ -15,8 +17,45 @@ void inicializarTabuleiro (){
     }
 }
 
-void printTabuleiro (){
+void inicializarNavios(){
+    int posX, posY, direcao;
+    int contNavio=0, random=0;
+    int i=qtdTiposNavios-1;
+    int tamNavio = tiposNavio[i];
 
+    while(contNavio < qtdNaviosAtivos){
+        posX = rand() % (maxColuna-1);
+        posY = rand() % (maxLinha-1);
+        direcao = (random % 3) + 1;
+
+        /*
+        Se não há navios adicionados, adicionar o maior
+        Se há navios, adicionar o navio medio
+        Se é o ultimo navio a ser adicionado, adicionar o menor
+        */
+        if(contNavio == 0)
+            if(addNavio(tamNavio, posX, posY, direcao)) {
+                contNavio++;
+                i--;
+                tamNavio = tiposNavio[i];
+                continue;
+            }
+        if(0 > contNavio || contNavio < qtdNaviosAtivos-1){
+            if(addNavio(tamNavio, posX, posY, direcao)) {
+                contNavio++;
+                continue;
+            }
+        }
+        else{
+            tamNavio = tiposNavio[0];
+            if(addNavio(tamNavio, posX, posY, direcao)){
+                contNavio++;
+            }
+        }            
+    }
+}
+
+void printTabuleiro (){
     for(int linha=-1; linha<maxLinha; linha++){
         for (int coluna=-1; coluna<maxColuna; coluna++){
             if(linha == -1){
@@ -35,9 +74,9 @@ void printTabuleiro (){
 }
 
 int buscaNavio(int tamNavio, int posX, int posY, int direcao){
-    int linha = posX, coluna = posY, i=0;
+    int coluna = posX, linha = posY, i=0;
     while (i < tamNavio){
-        if(tabuleiro[linha][coluna] == '*'){
+        if(tabuleiro[linha][coluna] != '~'){
             printf("Navio encontrado em (%d, %d)\n", linha, coluna);
             return 1;
         }
@@ -59,56 +98,55 @@ int checkErrosAddNavio(int tamNavio, int posX, int posY, int direcao){
     poxY: posição Y inicial do navio
     Direção: 1 = Vertical | 2 = Diagonal | 3 = Horizontal 
     */
-    int temErro = 0;
 
     //Tratamento de erros
     //Se o usuário selecionar uma posição fora do tabuleiro, ou valores negativos, encerra.
     if(posY<0 || posY>=maxLinha){
         printf("Erro: Linha inexistente no tabuleiro\n");
-        temErro = 1;
+        return 1;
     }
     if(posX<0 || posX>=maxColuna){
         printf("Erro: Coluna inexistente no tabuleiro\n");
-        temErro = 1;
+        return 1;
     }  
 
     //Encerra pra valores invalidos no tamanho do navio
     for(int i=0; i<qtdTiposNavios; i++){
-        if(navio[i] == tamNavio){
+        if(tiposNavio[i] == tamNavio){
             break;
         }
         if(i == qtdTiposNavios-1) {
-            temErro = 1;
             printf("Erro: Tamanho do navio inválido\n");
+            return 1;
         }
     }
 
     //Encerra pra valores inválidos de direcao do navio
     if(direcao <= 0 || direcao >= 4){
         printf("Erro: Valor inválido para direcao do navio\n");
-        temErro = 1;
+        return 1;
     }
 
     //Se o tamanho do barco exceder o tamanho do tabuleiro, encerra.
     if(direcao==1 && posY+tamNavio-1 > maxLinha) {
         printf("Erro: O Tamanho do navio excede o tabuleiro\n");
-        temErro = 1;
+        return 1;
     } 
     if(direcao==2 && (posX+tamNavio-1 >= maxColuna || posY+tamNavio-1 >= maxLinha)) {
         printf("Erro: O Tamanho do navio excede o tabuleiro\n");
-        temErro = 1;
+        return 1;
     } 
     if(direcao==3 && posX+tamNavio-1 > maxColuna) {
         printf("Erro: O Tamanho do navio excede o tabuleiro\n");
-        temErro = 1;
+        return 1;
     } 
 
     //Verifica se já existe um navio na posição
     if(buscaNavio(tamNavio, posX, posY, direcao)){
         printf("Erro ao tentar adicionar navio\n");
-        temErro = 1;
+        return 1;
     }
-    return temErro;
+    return 0;
 
 }
 
@@ -127,7 +165,7 @@ int addNavio(int tamNavio, int posX, int posY, int direcao){
     //Adiciona o navio no tabuleiro
     int linha = posY, coluna = posX, i=0;
     while (i < tamNavio){
-        tabuleiro[linha][coluna] = '*';
+        tabuleiro[linha][coluna] = tamNavio + '0';
         if (direcao == 1) linha++;
         if (direcao == 2){
             linha++;
@@ -136,16 +174,20 @@ int addNavio(int tamNavio, int posX, int posY, int direcao){
         if (direcao == 3) coluna++;
         i++;
     }
+    //printTabuleiro();
+    //printf("Navio adicionado | Tam=%d X=%d Y=%d Dir=%d \n", tamNavio, posX, posY, direcao);
     return 1;
 }
 
 void inicializarMenu(){
     int selectMenu=0;
     int tamNavio=0, posX=0, posY=0, direcao=0;
+
     do{
         printf("\nMENU | BATALHA NAVAL:\n");
         printf("1 - Ver Tabuleiro\n");
         printf("2 - Adicionar navio\n");
+        printf("8 - Adicionar navios aleatoriamente\n");
         printf("9 - Reset Tabuleiro\n");
         printf("0 - Sair\n");
         scanf("%d", &selectMenu);
@@ -163,7 +205,7 @@ void inicializarMenu(){
             printf("Coluna: ");
             scanf("%d", &posX);
             printf("Tamanho do Navio | Escolha entre ");
-            for(int i=0; i<qtdTiposNavios; i++) printf("%d ", navio[i]);
+            for(int i=0; i<qtdTiposNavios; i++) printf("%d ", tiposNavio[i]);
             printf(": ");
             scanf("%d", &tamNavio);
             printf("\nDirecao do Navio: \n1 - Vertical \n2 - Diagonal \n3 - Horizontal\n");
@@ -176,6 +218,11 @@ void inicializarMenu(){
             }
             break;
         
+        case 8:
+            inicializarNavios();
+            printTabuleiro();
+            break;
+
         case 9:
             inicializarTabuleiro();
             printTabuleiro();

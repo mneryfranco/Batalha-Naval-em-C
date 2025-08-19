@@ -1,6 +1,7 @@
 // Desafio Batalha Naval - MateCheck
-
 #include <stdio.h>
+#include <stdlib.h>
+
 #define maxLinha 10 // quantidade de linhas do tabuleiro
 #define maxColuna 10 // quantidade de colunas do tabuleiro
 #define qtdTiposNavios 3 // quantidade de tipos de navios diferentes no jogo
@@ -8,6 +9,7 @@
 int tiposNavio[qtdTiposNavios] = {1,3,5}; // vetor de navios, onde cada numero representa seu tamanho
 int tabNavios[maxLinha][maxColuna]; // guarda a informação de onde estão os navios | 0 - não tem | 1 - escondido | 2 - encontrado
 char tabuleiro[maxLinha][maxColuna]; // matriz do tabuleiro que será mostrada na tela
+int countNavioAtual = 0;
 
 void inicializarTabuleiro (){
     for(int i=0; i<maxLinha; i++){
@@ -19,14 +21,15 @@ void inicializarTabuleiro (){
 
 void inicializarNavios(){
     int posX, posY, direcao;
-    int contNavio=0, random=0;
+    int contNavio=0;
     int i=qtdTiposNavios-1;
     int tamNavio = tiposNavio[i];
 
+    inicializarTabuleiro();
     while(contNavio < qtdNaviosAtivos){
         posX = rand() % (maxColuna-1);
         posY = rand() % (maxLinha-1);
-        direcao = (random % 3) + 1;
+        direcao = (rand() % 3) + 1;
 
         /*
         Se não há navios adicionados, adicionar o maior
@@ -184,21 +187,16 @@ void inicializarMenu(){
     int tamNavio=0, posX=0, posY=0, direcao=0;
 
     do{
-        printf("\nMENU | BATALHA NAVAL:\n");
-        printf("1 - Ver Tabuleiro\n");
-        printf("2 - Adicionar navio\n");
-        printf("8 - Adicionar navios aleatoriamente\n");
+        printTabuleiro();
+        printf("MENU | BATALHA NAVAL:\n");
+        printf("1 - Adicionar um navio\n");
+        printf("8 - Add Navios aletórios\n");
         printf("9 - Reset Tabuleiro\n");
         printf("0 - Sair\n");
         scanf("%d", &selectMenu);
         
         switch (selectMenu){
-        case 1: 
-            printTabuleiro();
-            break;
-        
-            case 2:
-            printTabuleiro();
+        case 1:
             printf("Digite as coordenadas iniciais de onde quer adicionar o navio:\n");
             printf("Linha: ");
             scanf("%d", &posY);
@@ -213,19 +211,17 @@ void inicializarMenu(){
             printf("\n");
 
             if(addNavio(tamNavio, posX, posY, direcao)){
-                printTabuleiro();
                 printf("Navio adicionado\n");
             }
             break;
         
         case 8:
             inicializarNavios();
-            printTabuleiro();
+            printf("\033[H\033[J");
             break;
 
         case 9:
             inicializarTabuleiro();
-            printTabuleiro();
             break;
         
         case 0: 

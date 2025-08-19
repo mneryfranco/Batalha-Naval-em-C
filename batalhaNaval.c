@@ -4,9 +4,6 @@
 
 #define maxLinha 10 // quantidade de linhas do tabuleiro
 #define maxColuna 10 // quantidade de colunas do tabuleiro
-#define qtdTiposNavios 3 // quantidade de tipos de navios diferentes no jogo
-#define qtdNaviosAtivos 5 // quantidade de navios presentes no tabuleiro
-int tiposNavio[qtdTiposNavios] = {1,3,5}; // vetor de navios, onde cada numero representa seu tamanho
 int tabNavios[maxLinha][maxColuna]; // guarda a informação de onde estão os navios | 0 - não tem | 1 - escondido | 2 - encontrado
 char tabuleiro[maxLinha][maxColuna]; // matriz do tabuleiro que será mostrada na tela
 int countNavio = 0;
@@ -26,51 +23,31 @@ void printTabuleiro (){
         }
         printf("\n");
     }
-    printf("\n");
+    printf("Navios no jogo: %d\n\n", countNavio);
+}
+
+// Retorna o menor indice (linha ou coluna)
+int menorIndice(){
+    if(maxLinha < maxColuna)
+        return maxLinha; 
+    else return maxColuna;
+}
+
+// Retorna a capacidade máxima de navios do jogo, sendo 9 o máximo permitido
+int qtdMaximaNavios(){
+    menorIndice() > 9 ? 9 : menorIndice();
+}
+
+int tamanhoMaxNavio(){
+    return menorIndice()/2;
 }
 
 void inicializarTabuleiro (){
+    countNavio=0;
     for(int i=0; i<maxLinha; i++){
         for (int j=0; j<maxLinha; j++){
             tabuleiro[i][j] = '~';
         }
-    }
-}
-
-void inicializarNavios(){
-    countNavio=0;
-    int posX, posY, direcao;
-    int i=qtdTiposNavios-1;
-    int tamNavio = tiposNavio[i];
-
-    inicializarTabuleiro();
-    while(countNavio < qtdNaviosAtivos){
-        posX = rand() % (maxColuna-1);
-        posY = rand() % (maxLinha-1);
-        direcao = (rand() % 3) + 1;
-
-        /*
-        Se não há navios adicionados, adicionar o maior
-        Se há navios, adicionar o navio medio
-        Se é o ultimo navio a ser adicionado, adicionar o menor
-        */
-        if(countNavio == 0)
-            if(addNavio(tamNavio, posX, posY, direcao)) {
-                i--;
-                tamNavio = tiposNavio[i];
-                continue;
-            }
-        if(0 > countNavio || countNavio < qtdNaviosAtivos-1){
-            if(addNavio(tamNavio, posX, posY, direcao)) {
-                continue;
-            }
-        }
-        else{
-            tamNavio = tiposNavio[0];
-            if(addNavio(tamNavio, posX, posY, direcao)){
-                countNavio++;
-            }
-        }            
     }
 }
 
@@ -112,14 +89,9 @@ int checkErrosAddNavio(int tamNavio, int posX, int posY, int direcao){
     }  
 
     //Encerra pra valores invalidos no tamanho do navio
-    for(int i=0; i<qtdTiposNavios; i++){
-        if(tiposNavio[i] == tamNavio){
-            break;
-        }
-        if(i == qtdTiposNavios-1) {
-            printf("Erro: Tamanho do navio inválido\n");
-            return 1;
-        }
+    if(tamNavio > tamanhoMaxNavio()) {
+        printf("Erro: Navio muito grande. O tamanho maior é %d\n", tamanhoMaxNavio());
+        return 1;
     }
 
     //Encerra pra valores inválidos de direcao do navio
@@ -159,6 +131,12 @@ int addNavio(int tamNavio, int posX, int posY, int direcao){
     Direção: 1 = Vertical | 2 = Diagonal | 3 = Horizontal 
     */
    
+    //Verifica se o tabuleiro já está em sua capacidade máxima de navios
+    if(countNavio == qtdMaximaNavios()){
+        printf("Tabuleiro lotado (%d navios)\n", countNavio);
+        return 0;
+    }
+
     //Verifica se existe algum problema ao adicionar o navio
     if(checkErrosAddNavio(tamNavio, posX, posY, direcao)) 
         return 0;
@@ -176,18 +154,43 @@ int addNavio(int tamNavio, int posX, int posY, int direcao){
         i++;
     }
     countNavio++;
+    printTabuleiro();
+    return 1;
+}
+
+int addNavioRandom (int qtdNavios){
+    int posX, posY, direcao, tamanho;
+
+    if(qtdNavios > menorIndice()) qtdNavios = menorIndice();
+
+    do{
+        //Verifica se o tabuleiro já está em sua capacidade máxima de navios
+        if(countNavio == qtdMaximaNavios()){
+            printf("Tabuleiro lotado (%d navios)\n", countNavio);
+            return 0;
+            break;
+        }
+        posX = rand() % (maxColuna-1);
+        posY = rand() % (maxLinha-1);
+        direcao = (rand() % 3) + 1;
+        tamanho = rand() % (menorIndice() / 2);
+        if(addNavio(tamanho, posX, posY, direcao))
+            qtdNavios--;
+    } while(qtdNavios > 0);
     return 1;
 }
 
 void inicializarMenu(){
     int selectMenu=0;
     int tamNavio=0, posX=0, posY=0, direcao=0;
+    int qtdNavios=0;
 
     do{
         printTabuleiro();
         printf("MENU | BATALHA NAVAL:\n");
         printf("1 - Adicionar um navio\n");
-        printf("8 - Add Navios aletórios\n");
+        printf("2 - Adicionar navios aleatoriamente\n");
+        printf("8 - Limpar terminal\n");
         printf("9 - Reset Tabuleiro\n");
         printf("0 - Sair\n");
         scanf("%d", &selectMenu);
@@ -199,9 +202,7 @@ void inicializarMenu(){
             scanf("%d", &posY);
             printf("Coluna: ");
             scanf("%d", &posX);
-            printf("Tamanho do Navio | Escolha entre ");
-            for(int i=0; i<qtdTiposNavios; i++) printf("%d ", tiposNavio[i]);
-            printf(": ");
+            printf("Tamanho do Navio (máximo %d): ", tamanhoMaxNavio());
             scanf("%d", &tamNavio);
             printf("\nDirecao do Navio: \n1 - Vertical \n2 - Diagonal \n3 - Horizontal\n");
             scanf("%d", &direcao);
@@ -212,14 +213,16 @@ void inicializarMenu(){
             }
             break;
         
+        case 2:
+            printf("Digite quantos navios quer adicionar (máximo %d): ", menorIndice());
+            scanf("%d", &qtdNavios);
+            addNavioRandom(qtdNavios);
+            break;
         case 8:
-            inicializarNavios();
             system("clear");
             break;
-
         case 9:
             inicializarTabuleiro();
-            system("clear");
             break;
         
         case 0: 

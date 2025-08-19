@@ -1,10 +1,10 @@
 // Desafio Batalha Naval - MateCheck
-// Este código inicial serve como base para o desenvolvimento do sistema de Batalha Naval.
-// Siga os comentários para implementar cada parte do desafio.
 
 #include <stdio.h>
 #define maxLinha 10 // quantidade de linhas do tabuleiro
 #define maxColuna 10 // quantidade de colunas do tabuleiro
+#define qtdTiposNavios 3 // quantidade de navios diferentes no jogo
+int navio[qtdTiposNavios] = {1, 3, 5}; // vetor de navios, onde cada numero representa seu tamanho
 int tabuleiro[maxLinha][maxColuna];
 
 void inicializarTabuleiro (){
@@ -13,7 +13,6 @@ void inicializarTabuleiro (){
             tabuleiro[i][j] = 0;
         }
     }
-    return tabuleiro;
 }
 
 void printTabuleiro (){
@@ -53,44 +52,70 @@ int buscaNavio(int tamNavio, int posX, int posY, int direcao){
     return 0;
 }
 
-void addNavio(int tamNavio, int posX, int posY, int direcao){
+int checkErrosAddNavio(int tamNavio, int posX, int posY, int direcao){
     /*  
     tamNavio: Tamanho do navio a ser adicionado no tabuleiro
     posX: posição X inicial do navio
     poxY: posição Y inicial do navio
     Direção: 1 = Vertical | 2 = Diagonal | 3 = Horizontal 
     */
-
+    int temErro = 0;
 
     //Tratamento de erros
     //Se o usuário selecionar uma posição fora do tabuleiro, ou valores negativos, encerra.
-    if(posX<0 || posY<0 || posX>=maxColuna || posY>=maxLinha){
-        printf("Posicao inexistente no tabuleiro\n");
-        return;
-    } 
-    //Encerra pra valores invalidos no tamanho do navio
-    if(tamNavio <= 0){
-        printf("Tamanho do navio inválido\n");
-        return;
+    if(posY<0 || posY>=maxLinha){
+        printf("Erro: Linha inexistente no tabuleiro\n");
+        temErro = 1;
     }
+    if(posX<0 || posX>=maxColuna){
+        printf("Erro: Coluna inexistente no tabuleiro\n");
+        temErro = 1;
+    }  
+
+    //Encerra pra valores invalidos no tamanho do navio
+    for(int i=0; i<qtdTiposNavios; i++){
+        if(navio[i] == tamNavio){
+            break;
+        }
+        if(i == qtdTiposNavios-1) {
+            temErro = 1;
+            printf("Erro: Tamanho do navio inválido\n");
+        }
+    }
+
+    //Encerra pra valores inválidos de direcao do navio
+    if(direcao <= 0 || direcao >= 4){
+        printf("Erro: Valor inválido para direcao do navio\n");
+        temErro = 1;
+    }
+
     //Se o tamanho do barco exceder o tamanho do tabuleiro, encerra.
     if(direcao==1 && posY+tamNavio-1 > maxLinha) {
         printf("Erro: O Tamanho do navio excede o tabuleiro\n");
-        return;
+        temErro = 1;
     } 
     if(direcao==2 && (posX+tamNavio-1 >= maxColuna || posY+tamNavio-1 >= maxLinha)) {
         printf("Erro: O Tamanho do navio excede o tabuleiro\n");
-        return;
+        temErro = 1;
     } 
     if(direcao==3 && posX+tamNavio-1 > maxColuna) {
         printf("Erro: O Tamanho do navio excede o tabuleiro\n");
-        return;
+        temErro = 1;
     } 
+
     //Verifica se já existe um navio na posição
     if(buscaNavio(tamNavio, posX, posY, direcao)){
-        return;
+        temErro = 1;
     }
+    return temErro;
 
+}
+
+int addNavio(int tamNavio, int posX, int posY, int direcao){
+    
+    //Verifica se existe algum problema ao adicionar o navio
+    if(checkErrosAddNavio(tamNavio, posX, posY, direcao)) 
+        return 0;
 
     //Adiciona o navio no tabuleiro
     int linha = posX, coluna = posY, i=0;
@@ -104,25 +129,64 @@ void addNavio(int tamNavio, int posX, int posY, int direcao){
         if (direcao == 3) coluna++;
         i++;
     }
+    return 1;
+}
+
+void inicializarMenu(){
+    int selectMenu=0;
+    int tamNavio=0, posX=0, posY=0, direcao=0;
+    do{
+        printf("\nMENU | BATALHA NAVAL:\n");
+        printf("1 - Ver Tabuleiro\n");
+        printf("2 - Adicionar navio\n");
+        printf("0 - Sair\n");
+        scanf("%d", &selectMenu);
+        
+        switch (selectMenu){
+        case 1: 
+            printTabuleiro();
+            break;
+        
+            case 2:
+            printTabuleiro();
+            printf("Digite as coordenadas iniciais de onde quer adicionar o navio:\n");
+            printf("Linha: ");
+            scanf("%d", &posY);
+            printf("Coluna: ");
+            scanf("%d", &posX);
+            printf("Tamanho do Navio | Escolha entre ");
+            for(int i=0; i<qtdTiposNavios; i++) printf("%d ", navio[i]);
+            printf(": ");
+            scanf("%d", &tamNavio);
+            printf("\nDirecao do Navio: \n1 - Vertical \n2 - Diagonal \n3 - Horizontal\n");
+            scanf("%d", &direcao);
+            printf("\n");
+
+            if(addNavio(tamNavio, posX, posY, direcao))
+                printf("Navio adicionado\n");
+
+            break;
+        
+        case 0: break;
+        
+        default:
+            printf("Opcao invalida\n\n");
+            break;
+        }
+
+    } while (selectMenu != 0);
+    
 }
 
 int main() {
 
     inicializarTabuleiro();
-    addNavio(5, 1, 1, 1); // Add Navio tam=5, linha=1, coluna=1, Vertical
-    addNavio(4, 6, 6, 2); // Add Navio tam=4, linha=6, coluna=6, Diagonal
-    addNavio(3, 2, 5, 3); // Add Navio tam=3, linha=2, coluna=5, Horizontal
-    addNavio(3, 2, 5, 3); // Add Navio tam=3, linha=2, coluna=3, Horizontal
-    printTabuleiro();
-    
-    
-    // Sugestão: Posicione dois navios no tabuleiro, um verticalmente e outro horizontalmente.
-    // Sugestão: Utilize `printf` para exibir as coordenadas de cada parte dos navios.
-
-    // Nível Aventureiro - Expansão do Tabuleiro e Posicionamento Diagonal
-    // Sugestão: Expanda o tabuleiro para uma matriz 10x10.
-    // Sugestão: Posicione quatro navios no tabuleiro, incluindo dois na diagonal.
-    // Sugestão: Exiba o tabuleiro completo no console, mostrando 0 para posições vazias e 3 para posições ocupadas.
+    inicializarMenu();
+    //addNavio(5, 1, 1, 1); // Add Navio tam=5, linha=1, coluna=1, Vertical
+    //addNavio(4, 6, 6, 2); // Add Navio tam=4, linha=6, coluna=6, Diagonal
+    //addNavio(3, 2, 5, 3); // Add Navio tam=3, linha=2, coluna=5, Horizontal
+    //addNavio(3, 2, 5, 3); // Add Navio tam=3, linha=2, coluna=3, Horizontal
+    //printTabuleiro();
 
     // Nível Mestre - Habilidades Especiais com Matrizes
     // Sugestão: Crie matrizes para representar habilidades especiais como cone, cruz, e octaedro.

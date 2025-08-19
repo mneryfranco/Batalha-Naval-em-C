@@ -20,8 +20,8 @@ void inicializarTabuleiro (){
 }
 
 void inicializarNavios(){
+    countNavio=0;
     int posX, posY, direcao;
-    int countNavio=0;
     int i=qtdTiposNavios-1;
     int tamNavio = tiposNavio[i];
 
@@ -216,11 +216,12 @@ void inicializarMenu(){
         
         case 8:
             inicializarNavios();
-            printf("\033[H\033[J");
+            system("clear");
             break;
 
         case 9:
             inicializarTabuleiro();
+            system("clear");
             break;
         
         case 0: 

@@ -9,7 +9,7 @@
 int tiposNavio[qtdTiposNavios] = {1,3,5}; // vetor de navios, onde cada numero representa seu tamanho
 int tabNavios[maxLinha][maxColuna]; // guarda a informação de onde estão os navios | 0 - não tem | 1 - escondido | 2 - encontrado
 char tabuleiro[maxLinha][maxColuna]; // matriz do tabuleiro que será mostrada na tela
-int countNavioAtual = 0;
+int countNavio = 0;
 
 void inicializarTabuleiro (){
     for(int i=0; i<maxLinha; i++){
@@ -21,12 +21,12 @@ void inicializarTabuleiro (){
 
 void inicializarNavios(){
     int posX, posY, direcao;
-    int contNavio=0;
+    int countNavio=0;
     int i=qtdTiposNavios-1;
     int tamNavio = tiposNavio[i];
 
     inicializarTabuleiro();
-    while(contNavio < qtdNaviosAtivos){
+    while(countNavio < qtdNaviosAtivos){
         posX = rand() % (maxColuna-1);
         posY = rand() % (maxLinha-1);
         direcao = (rand() % 3) + 1;
@@ -36,23 +36,23 @@ void inicializarNavios(){
         Se há navios, adicionar o navio medio
         Se é o ultimo navio a ser adicionado, adicionar o menor
         */
-        if(contNavio == 0)
+        if(countNavio == 0)
             if(addNavio(tamNavio, posX, posY, direcao)) {
-                contNavio++;
+                countNavio++;
                 i--;
                 tamNavio = tiposNavio[i];
                 continue;
             }
-        if(0 > contNavio || contNavio < qtdNaviosAtivos-1){
+        if(0 > countNavio || countNavio < qtdNaviosAtivos-1){
             if(addNavio(tamNavio, posX, posY, direcao)) {
-                contNavio++;
+                countNavio++;
                 continue;
             }
         }
         else{
             tamNavio = tiposNavio[0];
             if(addNavio(tamNavio, posX, posY, direcao)){
-                contNavio++;
+                countNavio++;
             }
         }            
     }
@@ -168,7 +168,7 @@ int addNavio(int tamNavio, int posX, int posY, int direcao){
     //Adiciona o navio no tabuleiro
     int linha = posY, coluna = posX, i=0;
     while (i < tamNavio){
-        tabuleiro[linha][coluna] = tamNavio + '0';
+        tabuleiro[linha][coluna] = countNavio + '1';
         if (direcao == 1) linha++;
         if (direcao == 2){
             linha++;
@@ -177,8 +177,7 @@ int addNavio(int tamNavio, int posX, int posY, int direcao){
         if (direcao == 3) coluna++;
         i++;
     }
-    //printTabuleiro();
-    //printf("Navio adicionado | Tam=%d X=%d Y=%d Dir=%d \n", tamNavio, posX, posY, direcao);
+    countNavio++;
     return 1;
 }
 

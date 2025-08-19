@@ -11,6 +11,24 @@ int tabNavios[maxLinha][maxColuna]; // guarda a informação de onde estão os n
 char tabuleiro[maxLinha][maxColuna]; // matriz do tabuleiro que será mostrada na tela
 int countNavio = 0;
 
+void printTabuleiro (){
+    for(int linha=-1; linha<maxLinha; linha++){
+        for (int coluna=-1; coluna<maxColuna; coluna++){
+            if(linha == -1){
+                if(coluna==-1) printf("\t");
+                else printf("\033[31m%d\033[0m\t", coluna);
+            }
+            else{
+                if(coluna == -1) printf("\033[31m%d\033[0m\t", linha);
+                else printf("%c\t", tabuleiro[linha][coluna]);
+            }
+            
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
 void inicializarTabuleiro (){
     for(int i=0; i<maxLinha; i++){
         for (int j=0; j<maxLinha; j++){
@@ -38,14 +56,12 @@ void inicializarNavios(){
         */
         if(countNavio == 0)
             if(addNavio(tamNavio, posX, posY, direcao)) {
-                countNavio++;
                 i--;
                 tamNavio = tiposNavio[i];
                 continue;
             }
         if(0 > countNavio || countNavio < qtdNaviosAtivos-1){
             if(addNavio(tamNavio, posX, posY, direcao)) {
-                countNavio++;
                 continue;
             }
         }
@@ -56,24 +72,6 @@ void inicializarNavios(){
             }
         }            
     }
-}
-
-void printTabuleiro (){
-    for(int linha=-1; linha<maxLinha; linha++){
-        for (int coluna=-1; coluna<maxColuna; coluna++){
-            if(linha == -1){
-                if(coluna==-1) printf("\t");
-                else printf("\033[31m%d\033[0m\t", coluna);
-            }
-            else{
-                if(coluna == -1) printf("\033[31m%d\033[0m\t", linha);
-                else printf("%c\t", tabuleiro[linha][coluna]);
-            }
-            
-        }
-        printf("\n");
-    }
-    printf("\n");
 }
 
 int buscaNavio(int tamNavio, int posX, int posY, int direcao){

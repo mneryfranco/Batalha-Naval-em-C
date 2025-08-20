@@ -181,58 +181,91 @@ int addNavioRandom (int qtdNavios){
     return 1;
 }
 
+int doPoderCone(int posX, int posY, int tam){}
+
+int doPoderOcta(int posX, int posY, int tam){}
+
+int doPoderCruz(int posX, int posY, int tam){}
+
 void inicializarMenu(){
     int selectMenu=0;
-    int tamNavio=0, posX=0, posY=0, direcao=0;
-    int qtdNavios=0;
+    int tamanho=0, posX=0, posY=0, direcao=0;
+    int qtdNavios=0, superpoder=0;
 
     do{
         printTabuleiro();
         printf("MENU | BATALHA NAVAL:\n");
         printf("1 - Adicionar um navio\n");
         printf("2 - Adicionar navios aleatoriamente\n");
+        printf("3 - Usar Super Poder\n");
         printf("8 - Limpar terminal\n");
         printf("9 - Reset Tabuleiro\n");
         printf("0 - Sair\n");
         scanf("%d", &selectMenu);
         
         switch (selectMenu){
-        case 1:
-            printf("Digite as coordenadas iniciais de onde quer adicionar o navio:\n");
-            printf("Linha: ");
-            scanf("%d", &posY);
-            printf("Coluna: ");
-            scanf("%d", &posX);
-            printf("Tamanho do Navio (máximo %d): ", tamanhoMaxNavio());
-            scanf("%d", &tamNavio);
-            printf("\nDirecao do Navio: \n1 - Vertical \n2 - Diagonal \n3 - Horizontal\n");
-            scanf("%d", &direcao);
-            printf("\n");
+            case 1:
+                printf("Digite as coordenadas iniciais de onde quer adicionar o navio:\n");
+                printf("Linha: ");
+                scanf("%d", &posY);
+                printf("Coluna: ");
+                scanf("%d", &posX);
+                printf("Tamanho do Navio (máximo %d): ", tamanhoMaxNavio());
+                scanf("%d", &tamanho);
+                printf("\nDirecao do Navio: \n1 - Vertical \n2 - Diagonal \n3 - Horizontal\n");
+                scanf("%d", &direcao);
+                printf("\n");
 
-            if(addNavio(tamNavio, posX, posY, direcao)){
-                printf("Navio adicionado\n");
+                if(addNavio(tamanho, posX, posY, direcao)){
+                    printf("Navio adicionado\n");
+                }
+                break;
+            
+            case 2:
+                printf("Digite quantos navios quer adicionar (máximo %d): ", menorIndice());
+                scanf("%d", &qtdNavios);
+                addNavioRandom(qtdNavios);
+                break;
+            
+            case 3:
+                printf("\nEscolha o super poder:\n");
+                printf("1 - Cone\n");
+                printf("2 - Octaedro\n");
+                printf("3 - Cruz\n");
+                printf("0 - Cancelar\n");
+                do scanf("%d", &superpoder);
+                while (superpoder < 0 || superpoder > 3);
+                if(superpoder == 0) break;
+
+                printf("Defina o ponto central:\n");
+                printf("Linha: ");
+                scanf("%d", &posY);
+                printf("Coluna: ");
+                scanf("%d", &posX);
+                printf("Tamanho (2 ou 3): ");
+                do scanf("%d", &tamanho);
+                while (tamanho < 2 || tamanho > 3);
+
+                if(superpoder == 1) doPoderCone(posX, posY, tamanho);
+                if(superpoder == 2) doPoderOcta(posX, posY, tamanho);
+                if(superpoder == 3) doPoderCruz(posX, posY, tamanho);
+                break;
+                
+            case 8:
+                system("clear");
+                break;
+
+            case 9:
+                inicializarTabuleiro();
+                break;
+            
+            case 0: 
+                break;
+            
+            default:
+                printf("Opcao invalida\n\n");
+                break;
             }
-            break;
-        
-        case 2:
-            printf("Digite quantos navios quer adicionar (máximo %d): ", menorIndice());
-            scanf("%d", &qtdNavios);
-            addNavioRandom(qtdNavios);
-            break;
-        case 8:
-            system("clear");
-            break;
-        case 9:
-            inicializarTabuleiro();
-            break;
-        
-        case 0: 
-            break;
-        
-        default:
-            printf("Opcao invalida\n\n");
-            break;
-        }
 
     } while (selectMenu != 0);
     

@@ -6,7 +6,7 @@ int tamLinha = 10, tamColuna = 10; // quantidade de linhas e colunas do tabuleir
 char tabuleiro[14][14]; // matriz do tabuleiro que será mostrada na tela
 int tabNavios[14][14]; // guarda a informação de onde estão os navios | 0 - não tem | 1 - escondido | 2 - encontrado
 int countNavio = 0;
-int numAttacks = 0;
+int numBombas = 0;
 int numPowers = 0;
 
 // Retorna o menor indice (linha ou coluna)
@@ -34,8 +34,8 @@ int tamanhoMaxNavio(){
 
 void inicializarTabuleiro (){
     countNavio = 0;
-    numAttacks = (tamLinha*tamColuna)/3;
-    numPowers = (tamLinha*tamColuna)/(maiorIndice()*3);
+    numBombas = (tamLinha*tamColuna)/3;
+    numPowers = (tamLinha*tamColuna)/(maiorIndice()*4);
 
     for(int i=0; i<tamLinha; i++){
         for (int j=0; j<tamLinha; j++){
@@ -60,7 +60,7 @@ void printTabuleiro (){
         }
         printf("\n");
     }
-    printf("Bombas: %d \tNavios: %d\tEspeciais: %d\n\n", numAttacks, countNavio, numPowers);
+    printf("Bombas: %d \tNavios: %d\tEspeciais: %d\n\n", numBombas, countNavio, numPowers);
 }
 
 int buscaNavio(int tamNavio, int posX, int posY, int direcao){
@@ -206,7 +206,7 @@ int attack(int linha, int coluna){
     int hit = 0; // se acertou um navio se torna 1
     int checkNavioDestruido = 1; //será usada para checar se existe em torno desta posição outro char = target, ou seja, outra parte do navio
 
-    if(linha < 0 || coluna < 0 || linha > tamLinha || coluna > tamColuna){
+    if(linha < 0 || coluna < 0 || linha >= tamLinha || coluna >= tamColuna){
         printf("Fora do tabuleiro!\n");
         return 0;
     }
@@ -230,23 +230,26 @@ int attack(int linha, int coluna){
             if(checkNavioDestruido==0) break;
         }
         if(checkNavioDestruido == 1) {
-            printf("NAVIO DESTRUIDO!");
+            printf("NAVIO DESTRUIDO!\n");
             countNavio--;
         }
     
-    } else {
+    } else{
         tabuleiro[linha][coluna] = '*';
-        printf("Tiro na água!\n");
     }
+    
     return hit;
 }
 
 int attackBomba(int linha, int coluna){
-    numAttacks--;
+    numBombas--;
     if(attack(linha,coluna)){
         return 1;
     }
-    else return 0;
+    else {
+        printf("Tiro na água!\n");
+        return 0;
+    }
 }
 
 int attackPoder(int linha, int coluna, int tam){
@@ -289,10 +292,7 @@ void menu(){
         printTabuleiro();
         printf("BATALHA NAVAL: Escolha uma opção\n");
         printf("1 - Lançar Bomba\n");
-        printf("2 - Usar Super Poder\n");
-        //printf("6 - Adicionar navios aleatoriamente\n");
-        //printf("7 - Adicionar um navio\n");
-        //printf("8 - Limpar terminal\n");
+        if(numPowers > 0) printf("2 - Usar Super Poder\n");
         printf("9 - Reiniciar Jogo\n");
         printf("0 - Sair\n");
         scanf("%d", &selectMenu);
@@ -331,7 +331,7 @@ void menu(){
                     if(superpoder == 2) usePoderOcta(posX, posY, tamanho);
                     if(superpoder == 3) usePoderCruz(posX, posY, tamanho);
                     numPowers = numPowers - tamanho;
-                }
+                } 
                 break;
             
             /*
@@ -376,8 +376,9 @@ void menu(){
         }
         //printf("Pressione ENTER para continuar...\n");
         //while (getchar() != '\n');
-        sleep(2);
-    } while (selectMenu != 0);
+        sleep(1);
+    } while (selectMenu != 0 && numBombas > 0 && numBombas > 0);
+    if(qtdNavios > 0) printf("\nVocê perdeu! =/\n");
     
 }
 

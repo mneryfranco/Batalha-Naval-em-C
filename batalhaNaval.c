@@ -9,6 +9,7 @@ char tabuleiro[maxLinha][maxColuna]; // matriz do tabuleiro que será mostrada n
 int countNavio = 0;
 
 void printTabuleiro (){
+    printf("\n");
     for(int linha=-1; linha<maxLinha; linha++){
         for (int coluna=-1; coluna<maxColuna; coluna++){
             if(linha == -1){
@@ -101,7 +102,7 @@ int checkErrosAddNavio(int tamNavio, int posX, int posY, int direcao){
     }
 
     //Se o tamanho do barco exceder o tamanho do tabuleiro, encerra.
-    if(direcao==1 && posY+tamNavio-1 > maxLinha) {
+    if(direcao==1 && posY+tamNavio-1 >= maxLinha) {
         printf("Erro: O Tamanho do navio excede o tabuleiro\n");
         return 1;
     } 
@@ -109,7 +110,7 @@ int checkErrosAddNavio(int tamNavio, int posX, int posY, int direcao){
         printf("Erro: O Tamanho do navio excede o tabuleiro\n");
         return 1;
     } 
-    if(direcao==3 && posX+tamNavio-1 > maxColuna) {
+    if(direcao==3 && posX+tamNavio-1 >= maxColuna) {
         printf("Erro: O Tamanho do navio excede o tabuleiro\n");
         return 1;
     } 

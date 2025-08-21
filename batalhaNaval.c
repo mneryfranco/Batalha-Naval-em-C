@@ -39,7 +39,7 @@ int tamanhoMaxNavio(){
 void inicializarTabuleiro (){
     countNavio = 0;
     numBombas = (tamLinha*tamColuna)/3;
-    numPowers = (tamLinha*tamColuna)/(maiorIndice()*4);
+    numPowers = (tamLinha*tamColuna)/(maiorIndice()*3);
 
     for(int i=0; i<tamLinha; i++){
         for (int j=0; j<tamLinha; j++){
@@ -48,6 +48,7 @@ void inicializarTabuleiro (){
     }
 }
 
+// Imprime o tabuleiro do jogo no terminal
 void printTabuleiro (){
     printf("\n\n");
     for(int linha=-1; linha<tamLinha; linha++){
@@ -272,15 +273,16 @@ int attackPoder(int linha, int coluna, int tam){
 
 // Executa um super poder no tabuleiro em forma de cone
 int usePoderCone(int posX, int posY, int tam){
-    int largura = 0;
+    int largura = 0, altura = 0;
     int linha = posY-tam;
     int coluna = posX;
 
-    while(linha <= posY+tam){
+    while(altura <= tam+1){
         for(int c = -largura ; c <= largura ; c++){
             attackPoder(linha, coluna+c, tam);
         }
         linha++;
+        altura++;
         largura++;
     }
 }

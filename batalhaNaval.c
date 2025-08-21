@@ -421,7 +421,6 @@ void menuJogo(){
 
     do{
         system("clear");
-        printTabNavios();
         printTabuleiro();
         printf("MENU DO JOGO:\n");
         printf("1 - Atirar\n");

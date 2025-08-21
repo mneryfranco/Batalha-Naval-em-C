@@ -1,6 +1,8 @@
 // Desafio Batalha Naval - MateCheck
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <math.h>
 
 int tamLinha = 10, tamColuna = 10; // quantidade de linhas e colunas do tabuleiro
 char tabuleiro[14][14]; // matriz do tabuleiro que será mostrada na tela
@@ -28,10 +30,12 @@ int qtdMaximaNavios(){
     menorIndice() > 9 ? 9 : menorIndice();
 }
 
+// Retornar o maior tamanho possível de cada navio
 int tamanhoMaxNavio(){
     return menorIndice()/2;
 }
 
+// Reseta o tabuleiro e a contagem de bombas e poderes
 void inicializarTabuleiro (){
     countNavio = 0;
     numBombas = (tamLinha*tamColuna)/3;
@@ -49,12 +53,12 @@ void printTabuleiro (){
     for(int linha=-1; linha<tamLinha; linha++){
         for (int coluna=-1; coluna<tamColuna; coluna++){
             if(linha == -1){
-                if(coluna==-1) printf("\t");
-                else printf("\033[31m%d\033[0m\t", coluna);
+                if(coluna==-1) printf("   ");
+                else printf("\033[31m%d\033[0m  ", coluna);
             }
             else{
-                if(coluna == -1) printf("\033[31m%d\033[0m\t", linha);
-                else printf("%c\t", tabuleiro[linha][coluna]);
+                if(coluna == -1) printf("\033[31m%d\033[0m  ", linha);
+                else printf("%c  ", tabuleiro[linha][coluna]);
             }
             
         }
@@ -63,6 +67,7 @@ void printTabuleiro (){
     printf("Bombas: %d \tNavios: %d\tEspeciais: %d\n\n", numBombas, countNavio, numPowers);
 }
 
+// Procura um navio na posição informada e retorna 1 se tiver
 int buscaNavio(int tamNavio, int posX, int posY, int direcao){
     int coluna = posX, linha = posY, i=0;
     while (i < tamNavio){
@@ -81,6 +86,7 @@ int buscaNavio(int tamNavio, int posX, int posY, int direcao){
     return 0;
 }
 
+// Faz vários testes pra ver se é possível adicionar um navio com os dados fornecidos
 int checkErrosAddNavio(int tamNavio, int posX, int posY, int direcao){
     /*  
     tamNavio: Tamanho do navio a ser adicionado no tabuleiro
@@ -139,6 +145,7 @@ int checkErrosAddNavio(int tamNavio, int posX, int posY, int direcao){
 
 }
 
+// Adiciona um navio 
 int addNavio(int tamNavio, int posX, int posY, int direcao){
     /*  
     tamNavio: Tamanho do navio a ser adicionado no tabuleiro
@@ -175,6 +182,7 @@ int addNavio(int tamNavio, int posX, int posY, int direcao){
     return 1;
 }
 
+// Adiciona uma quantidade específica de navios aleatoriamente pelo tabuleiro
 int addNavioRandom (int qtdNavios){
     int posX, posY, direcao, tamanho;
 
@@ -201,6 +209,7 @@ int addNavioRandom (int qtdNavios){
     return 1;
 }
 
+// Ataca uma posição do tabuleiro. Retorna 1 se atingir um navio.
 int attack(int linha, int coluna){
     char target = tabuleiro[linha][coluna]; //armazena o char da posição que foi atacado
     int hit = 0; // se acertou um navio se torna 1
@@ -241,6 +250,7 @@ int attack(int linha, int coluna){
     return hit;
 }
 
+// Função de ataque com a bomba. Retorna 1 se tiver sucesso
 int attackBomba(int linha, int coluna){
     numBombas--;
     if(attack(linha,coluna)){
@@ -252,6 +262,7 @@ int attackBomba(int linha, int coluna){
     }
 }
 
+// Usada pelas funções de super poder para atacar
 int attackPoder(int linha, int coluna, int tam){
     if(attack(linha,coluna)){
         return 1;
@@ -259,27 +270,49 @@ int attackPoder(int linha, int coluna, int tam){
     else return 0;
 }
 
+// Executa um super poder no tabuleiro em forma de cone
 int usePoderCone(int posX, int posY, int tam){
-    int largura = 0, altura = 0;
+    int largura = 0;
     int linha = posY-tam;
     int coluna = posX;
 
-    while(altura <= tam*2){
+    while(linha <= posY+tam){
         for(int c = -largura ; c <= largura ; c++){
             attackPoder(linha, coluna+c, tam);
         }
         linha++;
-        altura++;
         largura++;
     }
 }
 
+// Executa um super poder no tabuleiro em forma de octaedro
 int usePoderOcta(int posX, int posY, int tam){
+    int largura;
+    int linha = posY-tam;
+    int coluna = posX;
 
+    while(linha <= posY+tam){
+        largura = tam - abs(posY-linha);
+        for(int c = -largura ; c <= largura ; c++){
+            attackPoder(linha, coluna+c, tam);
+        }
+        linha++;
+    }
 }
 
+// Executa um super poder no tabuleiro em forma de cruz
 int usePoderCruz(int posX, int posY, int tam){
+    tam++; // só pra deixar a cruz maior mesmo e ser mais interessante por jogardor usar
+    int linha = posY-tam;
 
+    for(int linha = posY-tam; linha <= posY+tam; linha++){
+        if(linha == posY){
+            for(int c = -tam ; c <= tam ; c++){
+                attackPoder(linha, posX+c, tam);
+            }
+        }
+        else attackPoder(linha, posX, tam);
+    }
 }
 
 void menu(){

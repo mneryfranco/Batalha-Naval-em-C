@@ -41,9 +41,7 @@ int tamanhoMaxNavio(){
 
 // Reseta o tabuleiro e a contagem de tiros e poderes
 void inicializarTabuleiro (){
-    //qtdNaviosAtivos = 0;
-    //numTiros = (tamLinha*tamColuna)/3;
-    //numPowers = (tamLinha*tamColuna)/(maiorIndice()*3);
+    qtdNaviosAtivos = 0;
 
     for(int i=0; i<tamLinha; i++){
         for (int j=0; j<tamLinha; j++){
@@ -221,33 +219,25 @@ int addNavio(int tamNavio, int X, int Y, int direcao){
         i++;
     }
     qtdNaviosAtivos++;
-    printTabuleiro();
+    printTabNavios();
     return 1;
 }
 
 // Adiciona uma quantidade específica de navios aleatoriamente pelo tabuleiro
-int addNavioRandom (int qtdNavios){
+int addNavioRandom (){
     int X, Y, direcao, tamanho;
-
-    if(qtdNavios > configNumNavios) qtdNavios = configNumNavios;
-    
+    int countAdd = configNumNavios;
     srand(time(NULL)); // inicializa a semente com o tempo atual
     do{
-        //Verifica se o tabuleiro já está em sua capacidade máxima de navios
-        if(qtdNaviosAtivos >= configNumNavios){
-            printf("Tabuleiro lotado (%d navios)\n", qtdNaviosAtivos);
-            return 0;
-            break;
-        }
         X = rand() % (tamColuna-1);
         Y = rand() % (tamLinha-1);
         direcao = (rand() % 3) + 1;
-        tamanho = (configNumNavios - qtdNaviosAtivos) / 2;
+        tamanho = (menorIndice() - qtdNaviosAtivos) / 2;
         if(tamanho < 2) tamanho = 2; // garante que o tamanho mínimo do navio seja 2
 
         if(addNavio(tamanho, X, Y, direcao))
-            qtdNavios--;
-    } while(qtdNavios > 0);
+            countAdd--;
+    } while(countAdd > 0);
     return 1;
 }
 
@@ -460,33 +450,6 @@ void menuJogo(){
 
                 initAttackSuper(superpoder, X, Y, tamanho);
                 break;
-            
-            /*
-            case 6:
-                printf("Digite quantos navios quer adicionar (máximo %d): ", menorIndice());
-                scanf("%d", &qtdNavios);
-                addNavioRandom(qtdNavios);
-                break;
-            
-
-            case 7:
-                printf("Digite as coordenadas iniciais de onde quer adicionar o navio:\n");
-                printf("Linha: ");
-                scanf("%d", &Y);
-                printf("Coluna: ");
-                scanf("%d", &X);
-                printf("Tamanho do Navio (máximo %d): ", tamanhoMaxNavio());
-                scanf("%d", &tamanho);
-                printf("\nDirecao do Navio: \n1 - Vertical \n2 - Diagonal \n3 - Horizontal\n");
-                scanf("%d", &direcao);
-                printf("\n");
-
-                if(addNavio(tamanho, X, Y, direcao)){
-                    printf("Navio adicionado\n");
-                }
-                break;
-            
-            */
 
             case 9:
                 inicializarTabuleiro();
@@ -508,9 +471,14 @@ void menuJogo(){
 
     } while (selectMenu != 0 && ((numTiros > 0 || numPowers > 0) && qtdNaviosAtivos > 0));
     
-    if(qtdNavios > 0) printf("\nVocê perdeu! =/\n");
-    if(qtdNavios <= 0) printf("\nParabéns! Você venceu! =/\n");
+    if(qtdNaviosAtivos > 0) printf("\nVocê perdeu! =/\n");
+    if(qtdNaviosAtivos <= 0) printf("\nParabéns! Você venceu!\n");
 
+    do{
+        printf("\nPressione 1 para continuar...");
+        scanf("%d", &selectMenu);
+    } while (selectMenu != 1); 
+    
     menuPrincipal();
 }
 

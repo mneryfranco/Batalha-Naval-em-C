@@ -10,9 +10,10 @@
 int tamLinha = 10, tamColuna = 10; // quantidade de linhas e colunas do tabuleiro
 char tabuleiro[14][14]; // matriz do tabuleiro que será mostrada na tela
 int tabNavios[14][14]; // guarda a informação de onde estão os navios
-int countNavio = 0;
-int numBombas = 0;
-int numPowers = 0;
+int configNumNavios = 6; // quantos navios vão ser adicionados no jogo
+int qtdNaviosAtivos = 0; // quantos navios estão ativos em jogo, ou seja, ainda não foram destruidos
+int numTiros = 30;
+int numPowers = 4;
 
 // Retorna o menor indice (linha ou coluna)
 int menorIndice(){
@@ -38,11 +39,11 @@ int tamanhoMaxNavio(){
     return menorIndice()/2;
 }
 
-// Reseta o tabuleiro e a contagem de bombas e poderes
+// Reseta o tabuleiro e a contagem de tiros e poderes
 void inicializarTabuleiro (){
-    countNavio = 0;
-    numBombas = (tamLinha*tamColuna)/3;
-    numPowers = (tamLinha*tamColuna)/(maiorIndice()*3);
+    //qtdNaviosAtivos = 0;
+    //numTiros = (tamLinha*tamColuna)/3;
+    //numPowers = (tamLinha*tamColuna)/(maiorIndice()*3);
 
     for(int i=0; i<tamLinha; i++){
         for (int j=0; j<tamLinha; j++){
@@ -69,7 +70,7 @@ void printTabuleiro (){
         }
         printf("\n");
     }
-    printf("Bombas: %d \tNavios: %d\tEspeciais: %d\n\n", numBombas, countNavio, numPowers);
+    printf("Tiros: %d \tNavios: %d\tEspeciais: %d\n\n", numTiros, qtdNaviosAtivos, numPowers);
 }
 
 // Imprime o tabuleiro de navios escondidos
@@ -89,12 +90,12 @@ void printTabNavios (){
         }
         printf("\n");
     }
-    printf("Bombas: %d \tNavios: %d\tEspeciais: %d\n\n", numBombas, countNavio, numPowers);
+    printf("Tiros: %d \tNavios: %d\tEspeciais: %d\n\n", numTiros, qtdNaviosAtivos, numPowers);
 }
 
 // Procura um navio na posição informada e retorna 1 se tiver
-int buscaNavio(int tamNavio, int posX, int posY, int direcao){
-    int coluna = posX, linha = posY, i=0;
+int buscaNavio(int tamNavio, int X, int Y, int direcao){
+    int coluna = X, linha = Y, i=0;
     while (i < tamNavio){
         if(tabNavios[linha][coluna] != '~'){
             printf("Navio encontrado em (%d, %d)\n", linha, coluna);
@@ -111,22 +112,39 @@ int buscaNavio(int tamNavio, int posX, int posY, int direcao){
     return 0;
 }
 
+// Revela a posição exata do navio quando ele é destruído
+void revelaNavioDestruido(int Y, int X){
+    char target = tabNavios[Y][X];
+
+    //Procura o ID do navio nas redondezas
+    for (int l = Y-1 ; l <= Y+1 ; l++){
+        for (int c = X-1 ; c <= X+1 ; c++){
+            if(l >= 0 && l < tamLinha && c >= 0 && c < tamColuna){ //limita a checagem só para posições validas (dentro do tabuleiro)
+                if(tabNavios[l][c] == target && tabuleiro[l][c] != target){
+                    tabuleiro[l][c] = target;
+                    revelaNavioDestruido(l, c);
+                }
+            }
+        }
+    }
+}
+
 // Faz vários testes pra ver se é possível adicionar um navio com os dados fornecidos
-int checkErrosAddNavio(int tamNavio, int posX, int posY, int direcao){
+int checkErrosAddNavio(int tamNavio, int X, int Y, int direcao){
     /*  
     tamNavio: Tamanho do navio a ser adicionado no tabuleiro
-    posX: posição X inicial do navio
+    X: posição X inicial do navio
     poxY: posição Y inicial do navio
     Direção: 1 = Vertical | 2 = Diagonal | 3 = Horizontal 
     */
 
     //Tratamento de erros
     //Se o usuário selecionar uma posição fora do tabuleiro, ou valores negativos, encerra.
-    if(posY<0 || posY>=tamLinha){
+    if(Y<0 || Y>=tamLinha){
         printf("Erro: Linha inexistente no tabuleiro\n");
         return 1;
     }
-    if(posX<0 || posX>=tamColuna){
+    if(X<0 || X>=tamColuna){
         printf("Erro: Coluna inexistente no tabuleiro\n");
         return 1;
     }  
@@ -148,21 +166,21 @@ int checkErrosAddNavio(int tamNavio, int posX, int posY, int direcao){
     }
 
     //Se o tamanho do barco exceder o tamanho do tabuleiro, encerra.
-    if(direcao==1 && posY+tamNavio-1 >= tamLinha) {
+    if(direcao==1 && Y+tamNavio-1 >= tamLinha) {
         printf("Erro: O Tamanho do navio excede o tabuleiro\n");
         return 1;
     } 
-    if(direcao==2 && (posX+tamNavio-1 >= tamColuna || posY+tamNavio-1 >= tamLinha)) {
+    if(direcao==2 && (X+tamNavio-1 >= tamColuna || Y+tamNavio-1 >= tamLinha)) {
         printf("Erro: O Tamanho do navio excede o tabuleiro\n");
         return 1;
     } 
-    if(direcao==3 && posX+tamNavio-1 >= tamColuna) {
+    if(direcao==3 && X+tamNavio-1 >= tamColuna) {
         printf("Erro: O Tamanho do navio excede o tabuleiro\n");
         return 1;
     } 
 
     //Verifica se já existe um navio na posição
-    if(buscaNavio(tamNavio, posX, posY, direcao)){
+    if(buscaNavio(tamNavio, X, Y, direcao)){
         printf("Erro ao tentar adicionar navio\n");
         return 1;
     }
@@ -171,29 +189,29 @@ int checkErrosAddNavio(int tamNavio, int posX, int posY, int direcao){
 }
 
 // Adiciona um navio 
-int addNavio(int tamNavio, int posX, int posY, int direcao){
+int addNavio(int tamNavio, int X, int Y, int direcao){
     /*  
     tamNavio: Tamanho do navio a ser adicionado no tabuleiro
-    posX: posição X inicial do navio
+    X: posição X inicial do navio
     poxY: posição Y inicial do navio
     Direção: 1 = Vertical | 2 = Diagonal | 3 = Horizontal 
     */
    
     //Verifica se o tabuleiro já está em sua capacidade máxima de navios
-    if(countNavio == qtdMaximaNavios()){
-        printf("Tabuleiro lotado (%d navios)\n", countNavio);
+    if(qtdNaviosAtivos >= configNumNavios){
+        printf("Tabuleiro lotado (%d navios)\n", qtdNaviosAtivos);
         return 0;
     }
 
     //Verifica se existe algum problema ao adicionar o navio
-    if(checkErrosAddNavio(tamNavio, posX, posY, direcao)){
+    if(checkErrosAddNavio(tamNavio, X, Y, direcao)){
         return 0;
     }
 
     //Adiciona o navio no tabuleiro
-    int linha = posY, coluna = posX, i=0;
+    int linha = Y, coluna = X, i=0;
     while (i < tamNavio){
-        tabNavios[linha][coluna] = countNavio + '0';
+        tabNavios[linha][coluna] = qtdNaviosAtivos + '0';
         if (direcao == 1) linha++;
         if (direcao == 2){
             linha++;
@@ -202,33 +220,32 @@ int addNavio(int tamNavio, int posX, int posY, int direcao){
         if (direcao == 3) coluna++;
         i++;
     }
-    countNavio++;
+    qtdNaviosAtivos++;
     printTabuleiro();
     return 1;
 }
 
 // Adiciona uma quantidade específica de navios aleatoriamente pelo tabuleiro
 int addNavioRandom (int qtdNavios){
-    int posX, posY, direcao, tamanho;
+    int X, Y, direcao, tamanho;
 
-    if(qtdNavios > qtdMaximaNavios()+1) qtdNavios = qtdMaximaNavios()+1;
+    if(qtdNavios > configNumNavios) qtdNavios = configNumNavios;
     
     srand(time(NULL)); // inicializa a semente com o tempo atual
     do{
         //Verifica se o tabuleiro já está em sua capacidade máxima de navios
-        if(countNavio == qtdMaximaNavios()){
-            printf("Tabuleiro lotado (%d navios)\n", countNavio);
+        if(qtdNaviosAtivos >= configNumNavios){
+            printf("Tabuleiro lotado (%d navios)\n", qtdNaviosAtivos);
             return 0;
             break;
         }
-        posX = rand() % (tamColuna-1);
-        posY = rand() % (tamLinha-1);
+        X = rand() % (tamColuna-1);
+        Y = rand() % (tamLinha-1);
         direcao = (rand() % 3) + 1;
-        //tamanho = rand() % (qtdMaximaNavios() / 2)+1;
-        tamanho = (qtdMaximaNavios()+1 - countNavio) / 2;
+        tamanho = (configNumNavios - qtdNaviosAtivos) / 2;
         if(tamanho < 2) tamanho = 2; // garante que o tamanho mínimo do navio seja 2
 
-        if(addNavio(tamanho, posX, posY, direcao))
+        if(addNavio(tamanho, X, Y, direcao))
             qtdNavios--;
     } while(qtdNavios > 0);
     return 1;
@@ -246,17 +263,16 @@ int attack(int linha, int coluna){
     }
 
     //Verifica se acertou um navio
-    if(target >= '0' && target <= '0' + qtdMaximaNavios()){
+    if(target >= '0' && target <= '0' + configNumNavios){
         printf("Navio atingido!\n");
         hit = 1;
         tabuleiro[linha][coluna] = 'X';
-        tabNavios[linha][coluna] = 'X';
 
         //Verifica se o navio foi destruído
         for(int l = linha-1 ; l <= linha+1 ; l++){
             for(int c = coluna-1 ; c <= coluna+1 ; c++){
                 if(l >= 0 && l < tamLinha && c >= 0 && c < tamColuna){ //limita a checagem só para posições validas (dentro do tabuleiro)
-                    if(tabNavios[l][c] == target) {
+                    if(tabNavios[l][c] == target && tabuleiro[l][c] != 'X') {
                         checkNavioDestruido = 0;
                         break;
                     }
@@ -266,12 +282,12 @@ int attack(int linha, int coluna){
         }
         if(checkNavioDestruido == 1) {
             printf("NAVIO DESTRUIDO!\n");
-            countNavio--;
+            qtdNaviosAtivos--;
+            revelaNavioDestruido(linha, coluna);
         }
     
     } else{
         tabuleiro[linha][coluna] = '*';
-        tabNavios[linha][coluna] = '*';
     }
     
     return hit;
@@ -279,7 +295,7 @@ int attack(int linha, int coluna){
 
 // Função de ataque com a bomba. Retorna 1 se tiver sucesso
 int attackBomba(int linha, int coluna){
-    numBombas--;
+    numTiros--;
     if(attack(linha,coluna)){
         return 1;
     }
@@ -297,24 +313,24 @@ int attackPoder(int linha, int coluna, int tam){
     else return 0;
 }
 
-int initAttackSuper(int superpoder, int posX, int posY, int tam){
+int initAttackSuper(int superpoder, int X, int Y, int tam){
     if(numPowers < tam){
         printf("Você não tem poder especial suficiente\n");
         return 0;
     }
-    if(superpoder == 1) usePoderCone(posX, posY, tam);
-    if(superpoder == 2) usePoderOcta(posX, posY, tam);
-    if(superpoder == 3) usePoderCruz(posX, posY, tam);
+    if(superpoder == 1) usePoderCone(X, Y, tam);
+    if(superpoder == 2) usePoderOcta(X, Y, tam);
+    if(superpoder == 3) usePoderCruz(X, Y, tam);
     
     numPowers = numPowers - tam;
     return 1;
 }
 
 // Executa um super poder no tabuleiro em forma de cone
-int usePoderCone(int posX, int posY, int tam){
+int usePoderCone(int X, int Y, int tam){
     int largura = 0, altura = 0;
-    int linha = posY-tam;
-    int coluna = posX;
+    int linha = Y-tam;
+    int coluna = X;
 
     while(altura <= tam+1){
         for(int c = -largura ; c <= largura ; c++){
@@ -327,13 +343,13 @@ int usePoderCone(int posX, int posY, int tam){
 }
 
 // Executa um super poder no tabuleiro em forma de octaedro
-int usePoderOcta(int posX, int posY, int tam){
+int usePoderOcta(int X, int Y, int tam){
     int largura;
-    int linha = posY-tam;
-    int coluna = posX;
+    int linha = Y-tam;
+    int coluna = X;
 
-    while(linha <= posY+tam){
-        largura = tam - abs(posY-linha);
+    while(linha <= Y+tam){
+        largura = tam - abs(Y-linha);
         for(int c = -largura ; c <= largura ; c++){
             attackPoder(linha, coluna+c, tam);
         }
@@ -342,17 +358,17 @@ int usePoderOcta(int posX, int posY, int tam){
 }
 
 // Executa um super poder no tabuleiro em forma de cruz
-int usePoderCruz(int posX, int posY, int tam){
+int usePoderCruz(int X, int Y, int tam){
     tam++; // só pra deixar a cruz maior mesmo e ser mais interessante por jogardor usar
-    int linha = posY-tam;
+    int linha = Y-tam;
 
-    for(int linha = posY-tam; linha <= posY+tam; linha++){
-        if(linha == posY){
+    for(int linha = Y-tam; linha <= Y+tam; linha++){
+        if(linha == Y){
             for(int c = -tam ; c <= tam ; c++){
-                attackPoder(linha, posX+c, tam);
+                attackPoder(linha, X+c, tam);
             }
         }
-        else attackPoder(linha, posX, tam);
+        else attackPoder(linha, X, tam);
     }
 }
 
@@ -370,7 +386,7 @@ void menuPrincipal(){
             "Este é um jogo Single Player.\n"
             "Seu objetivo é destruir todos os navios no tabuleiro.\n"
             "Os navios podem estar posicinados de forma horizontal, vertical ou diagonal, e possuem tamanho de 2 a 5.\n"
-            "Descubra a posição dos navios e use suas bombas e poderes para destrui-los! \n\n"
+            "Descubra a posição dos navios e use seus tiros e poderes para destrui-los! \n\n"
             
             RED"MENU PRINCIPAL:\n"RESETCOLOR
             "1 - Iniciar Jogo\n"
@@ -382,7 +398,7 @@ void menuPrincipal(){
         switch (selectMenu){
             case 1:
                 inicializarTabuleiro();
-                addNavioRandom(qtdMaximaNavios());
+                addNavioRandom(configNumNavios);
                 menuJogo();
                 break;
             
@@ -400,15 +416,16 @@ void menuPrincipal(){
 //Menu com o jogo ativo
 void menuJogo(){
     int selectMenu=0;
-    int tamanho=0, posX=0, posY=0, direcao=0;
+    int tamanho=0, X=0, Y=0, direcao=0;
     int qtdNavios=0, superpoder=0;
 
     do{
         system("clear");
+        printTabNavios();
         printTabuleiro();
         printf("MENU DO JOGO:\n");
-        printf("1 - Lançar Bomba\n");
-        if(numPowers > 0) printf("2 - Usar Super Poder\n");
+        printf("1 - Atirar\n");
+        if(numPowers > 0) printf("2 - Usar Especial\n");
         printf("9 - Reiniciar Jogo\n");
         printf("0 - Revelar tabuleiro e Finalizar\n");
         scanf("%d", &selectMenu);
@@ -417,10 +434,10 @@ void menuJogo(){
         switch (selectMenu){
             case 1:
                 printf("Linha: ");
-                scanf("%d", &posY);
+                scanf("%d", &Y);
                 printf("Coluna: ");
-                scanf("%d", &posX);
-                attackBomba(posY,posX);
+                scanf("%d", &X);
+                attackBomba(Y,X);
                 break;
 
             case 2:
@@ -435,14 +452,14 @@ void menuJogo(){
 
                 printf("Defina o ponto central:\n");
                 printf("Linha: ");
-                scanf("%d", &posY);
+                scanf("%d", &Y);
                 printf("Coluna: ");
-                scanf("%d", &posX);
+                scanf("%d", &X);
                 printf("Tamanho (1 ou 2): ");
                 do scanf("%d", &tamanho);
                 while (tamanho < 1 || tamanho > 2);
 
-                initAttackSuper(superpoder, posX, posY, tamanho);
+                initAttackSuper(superpoder, X, Y, tamanho);
                 break;
             
             /*
@@ -456,16 +473,16 @@ void menuJogo(){
             case 7:
                 printf("Digite as coordenadas iniciais de onde quer adicionar o navio:\n");
                 printf("Linha: ");
-                scanf("%d", &posY);
+                scanf("%d", &Y);
                 printf("Coluna: ");
-                scanf("%d", &posX);
+                scanf("%d", &X);
                 printf("Tamanho do Navio (máximo %d): ", tamanhoMaxNavio());
                 scanf("%d", &tamanho);
                 printf("\nDirecao do Navio: \n1 - Vertical \n2 - Diagonal \n3 - Horizontal\n");
                 scanf("%d", &direcao);
                 printf("\n");
 
-                if(addNavio(tamanho, posX, posY, direcao)){
+                if(addNavio(tamanho, X, Y, direcao)){
                     printf("Navio adicionado\n");
                 }
                 break;
@@ -474,7 +491,8 @@ void menuJogo(){
 
             case 9:
                 inicializarTabuleiro();
-                addNavioRandom(qtdMaximaNavios());
+                addNavioRandom(configNumNavios);
+                system("clear");
                 break;
             
             case 0: 
@@ -489,9 +507,12 @@ void menuJogo(){
 
         sleep(1);
 
-    } while (selectMenu != 0 && numBombas > 0 && numBombas > 0);
+    } while (selectMenu != 0 && ((numTiros > 0 || numPowers > 0) && qtdNaviosAtivos > 0));
     
     if(qtdNavios > 0) printf("\nVocê perdeu! =/\n");
+    if(qtdNavios <= 0) printf("\nParabéns! Você venceu! =/\n");
+
+    menuPrincipal();
 }
 
 

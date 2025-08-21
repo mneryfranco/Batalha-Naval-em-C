@@ -6,7 +6,7 @@
 
 int tamLinha = 10, tamColuna = 10; // quantidade de linhas e colunas do tabuleiro
 char tabuleiro[14][14]; // matriz do tabuleiro que será mostrada na tela
-int tabNavios[14][14]; // guarda a informação de onde estão os navios | 0 - não tem | 1 - escondido | 2 - encontrado
+int tabNavios[14][14]; // guarda a informação de onde estão os navios
 int countNavio = 0;
 int numBombas = 0;
 int numPowers = 0;
@@ -44,6 +44,7 @@ void inicializarTabuleiro (){
     for(int i=0; i<tamLinha; i++){
         for (int j=0; j<tamLinha; j++){
             tabuleiro[i][j] = '~';
+            tabNavios[i][j] = '~';
         }
     }
 }
@@ -68,11 +69,31 @@ void printTabuleiro (){
     printf("Bombas: %d \tNavios: %d\tEspeciais: %d\n\n", numBombas, countNavio, numPowers);
 }
 
+// Imprime o tabuleiro de navios escondidos
+void printTabNavios (){
+    printf("\n\n");
+    for(int linha=-1; linha<tamLinha; linha++){
+        for (int coluna=-1; coluna<tamColuna; coluna++){
+            if(linha == -1){
+                if(coluna==-1) printf("   ");
+                else printf("\033[31m%d\033[0m  ", coluna);
+            }
+            else{
+                if(coluna == -1) printf("\033[31m%d\033[0m  ", linha);
+                else printf("%c  ", tabNavios[linha][coluna]);
+            }
+            
+        }
+        printf("\n");
+    }
+    printf("Bombas: %d \tNavios: %d\tEspeciais: %d\n\n", numBombas, countNavio, numPowers);
+}
+
 // Procura um navio na posição informada e retorna 1 se tiver
 int buscaNavio(int tamNavio, int posX, int posY, int direcao){
     int coluna = posX, linha = posY, i=0;
     while (i < tamNavio){
-        if(tabuleiro[linha][coluna] != '~'){
+        if(tabNavios[linha][coluna] != '~'){
             printf("Navio encontrado em (%d, %d)\n", linha, coluna);
             return 1;
         }
@@ -169,7 +190,7 @@ int addNavio(int tamNavio, int posX, int posY, int direcao){
     //Adiciona o navio no tabuleiro
     int linha = posY, coluna = posX, i=0;
     while (i < tamNavio){
-        tabuleiro[linha][coluna] = countNavio + '0';
+        tabNavios[linha][coluna] = countNavio + '0';
         if (direcao == 1) linha++;
         if (direcao == 2){
             linha++;
@@ -212,7 +233,7 @@ int addNavioRandom (int qtdNavios){
 
 // Ataca uma posição do tabuleiro. Retorna 1 se atingir um navio.
 int attack(int linha, int coluna){
-    char target = tabuleiro[linha][coluna]; //armazena o char da posição que foi atacado
+    char target = tabNavios[linha][coluna]; //armazena o char da posição que foi atacado
     int hit = 0; // se acertou um navio se torna 1
     int checkNavioDestruido = 1; //será usada para checar se existe em torno desta posição outro char = target, ou seja, outra parte do navio
 
@@ -226,12 +247,13 @@ int attack(int linha, int coluna){
         printf("Navio atingido!\n");
         hit = 1;
         tabuleiro[linha][coluna] = 'X';
+        tabNavios[linha][coluna] = 'X';
 
         //Verifica se o navio foi destruído
         for(int l = linha-1 ; l <= linha+1 ; l++){
             for(int c = coluna-1 ; c <= coluna+1 ; c++){
                 if(l >= 0 && l < tamLinha && c >= 0 && c < tamColuna){ //limita a checagem só para posições validas (dentro do tabuleiro)
-                    if(tabuleiro[l][c] == target) {
+                    if(tabNavios[l][c] == target) {
                         checkNavioDestruido = 0;
                         break;
                     }
@@ -246,6 +268,7 @@ int attack(int linha, int coluna){
     
     } else{
         tabuleiro[linha][coluna] = '*';
+        tabNavios[linha][coluna] = '*';
     }
     
     return hit;
@@ -264,11 +287,24 @@ int attackBomba(int linha, int coluna){
 }
 
 // Usada pelas funções de super poder para atacar
-int attackPoder(int linha, int coluna, int tam){
+int attackPoder(int linha, int coluna, int tam){    
     if(attack(linha,coluna)){
         return 1;
     }
     else return 0;
+}
+
+int initAttackSuper(int superpoder, int posX, int posY, int tam){
+    if(numPowers < tam){
+        printf("Você não tem poder especial suficiente\n");
+        return 0;
+    }
+    if(superpoder == 1) usePoderCone(posX, posY, tam);
+    if(superpoder == 2) usePoderOcta(posX, posY, tam);
+    if(superpoder == 3) usePoderCruz(posX, posY, tam);
+    
+    numPowers = numPowers - tam;
+    return 1;
 }
 
 // Executa um super poder no tabuleiro em forma de cone
@@ -322,6 +358,7 @@ void menu(){
     int tamanho=0, posX=0, posY=0, direcao=0;
     int qtdNavios=0, superpoder=0;
 
+    system("clear");
     do{
         system("clear");
         printTabuleiro();
@@ -329,10 +366,10 @@ void menu(){
         printf("1 - Lançar Bomba\n");
         if(numPowers > 0) printf("2 - Usar Super Poder\n");
         printf("9 - Reiniciar Jogo\n");
-        printf("0 - Sair\n");
+        printf("0 - Revelar tabuleiro e Finalizar\n");
         scanf("%d", &selectMenu);
         printf("\n");
-        
+
         switch (selectMenu){
             case 1:
                 printf("Linha: ");
@@ -361,12 +398,7 @@ void menu(){
                 do scanf("%d", &tamanho);
                 while (tamanho < 1 || tamanho > 2);
 
-                if(numPowers >= tamanho){
-                    if(superpoder == 1) usePoderCone(posX, posY, tamanho);
-                    if(superpoder == 2) usePoderOcta(posX, posY, tamanho);
-                    if(superpoder == 3) usePoderCruz(posX, posY, tamanho);
-                    numPowers = numPowers - tamanho;
-                } 
+                initAttackSuper(superpoder, posX, posY, tamanho);
                 break;
             
             /*
@@ -402,6 +434,7 @@ void menu(){
                 break;
             
             case 0: 
+                printTabNavios();
                 break;
             
             default:
@@ -409,9 +442,9 @@ void menu(){
                 break;
                        
         }
-        //printf("Pressione ENTER para continuar...\n");
-        //while (getchar() != '\n');
+
         sleep(1);
+
     } while (selectMenu != 0 && numBombas > 0 && numBombas > 0);
     if(qtdNavios > 0) printf("\nVocê perdeu! =/\n");
     

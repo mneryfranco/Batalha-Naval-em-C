@@ -4,6 +4,9 @@
 #include <time.h>
 #include <math.h>
 
+#define RED "\033[31m"
+#define RESETCOLOR "\033[0m"
+
 int tamLinha = 10, tamColuna = 10; // quantidade de linhas e colunas do tabuleiro
 char tabuleiro[14][14]; // matriz do tabuleiro que será mostrada na tela
 int tabNavios[14][14]; // guarda a informação de onde estão os navios
@@ -56,10 +59,10 @@ void printTabuleiro (){
         for (int coluna=-1; coluna<tamColuna; coluna++){
             if(linha == -1){
                 if(coluna==-1) printf("   ");
-                else printf("\033[31m%d\033[0m  ", coluna);
+                else printf(RED"%d  "RESETCOLOR, coluna);
             }
             else{
-                if(coluna == -1) printf("\033[31m%d\033[0m  ", linha);
+                if(coluna == -1) printf(RED"%d  "RESETCOLOR  , linha);
                 else printf("%c  ", tabuleiro[linha][coluna]);
             }
             
@@ -76,10 +79,10 @@ void printTabNavios (){
         for (int coluna=-1; coluna<tamColuna; coluna++){
             if(linha == -1){
                 if(coluna==-1) printf("   ");
-                else printf("\033[31m%d\033[0m  ", coluna);
+                else printf(RED"%d  "RESETCOLOR, coluna);
             }
             else{
-                if(coluna == -1) printf("\033[31m%d\033[0m  ", linha);
+                if(coluna == -1) printf(RED"%d  "RESETCOLOR  , linha);
                 else printf("%c  ", tabNavios[linha][coluna]);
             }
             
@@ -353,16 +356,57 @@ int usePoderCruz(int posX, int posY, int tam){
     }
 }
 
-void menu(){
+//Menu inicial 
+void menuPrincipal(){
+    int selectMenu=0;
+    
+    do{
+        system("clear");
+
+        printf(
+            "================================\n"
+            RED"\tBATALHA NAVAL\n"RESETCOLOR
+            "================================\n\n"
+            "Este é um jogo Single Player.\n"
+            "Seu objetivo é destruir todos os navios no tabuleiro.\n"
+            "Os navios podem estar posicinados de forma horizontal, vertical ou diagonal, e possuem tamanho de 2 a 5.\n"
+            "Descubra a posição dos navios e use suas bombas e poderes para destrui-los! \n\n"
+            
+            RED"MENU PRINCIPAL:\n"RESETCOLOR
+            "1 - Iniciar Jogo\n"
+            "0 - Finalizar\n");
+
+        scanf("%d", &selectMenu);
+        printf("\n");
+
+        switch (selectMenu){
+            case 1:
+                inicializarTabuleiro();
+                addNavioRandom(qtdMaximaNavios());
+                menuJogo();
+                break;
+            
+            case 0:
+                break;
+            
+            default:
+                printf("Opção Inválida\n");
+        }
+        sleep(1);
+    } while(selectMenu < 0 || selectMenu > 1);
+
+}
+
+//Menu com o jogo ativo
+void menuJogo(){
     int selectMenu=0;
     int tamanho=0, posX=0, posY=0, direcao=0;
     int qtdNavios=0, superpoder=0;
 
-    system("clear");
     do{
         system("clear");
         printTabuleiro();
-        printf("BATALHA NAVAL: Escolha uma opção\n");
+        printf("MENU DO JOGO:\n");
         printf("1 - Lançar Bomba\n");
         if(numPowers > 0) printf("2 - Usar Super Poder\n");
         printf("9 - Reiniciar Jogo\n");
@@ -446,15 +490,12 @@ void menu(){
         sleep(1);
 
     } while (selectMenu != 0 && numBombas > 0 && numBombas > 0);
-    if(qtdNavios > 0) printf("\nVocê perdeu! =/\n");
     
+    if(qtdNavios > 0) printf("\nVocê perdeu! =/\n");
 }
 
-int main() {
 
-    inicializarTabuleiro();
-    addNavioRandom(qtdMaximaNavios());
-    menu();
-    
+int main() {
+    menuPrincipal();
     return 0;
 }

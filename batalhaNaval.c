@@ -5,6 +5,9 @@
 #include <math.h>
 
 #define RED "\033[31m"
+#define DARKBLUE "\033[34m"
+#define DARKBLACK "\033[1m"
+#define GRAY "\033[37m"
 #define RESETCOLOR "\033[0m"
 
 int tamLinha = 10, tamColuna = 10; // quantidade de linhas e colunas do tabuleiro
@@ -43,8 +46,8 @@ int tamanhoMaxNavio(){
 // Reseta o tabuleiro e a contagem de navios, tiros e poderes
 void inicializarTabuleiro (){
     qtdNaviosAtivos = 0;
-    numTiros = 1;
-    numPowers = 0;
+    numTiros = 30;
+    numPowers = 6;
     configNumNavios = 6;
 
     for(int i=0; i<tamLinha; i++){
@@ -59,20 +62,38 @@ void inicializarTabuleiro (){
 // Imprime o tabuleiro do jogo no terminal
 void printTabuleiro (){
     printf("\n\n");
-    for(int linha=-1; linha<tamLinha; linha++){
-        for (int coluna=-1; coluna<tamColuna; coluna++){
-            if(linha == -1){
-                if(coluna==-1) printf("   ");
-                else printf(RED"%d  "RESETCOLOR, coluna);
+    for(int l=-1; l<tamLinha; l++){
+        for (int c=-1; c<tamColuna; c++){
+            if(l == -1){
+                if(c==-1) printf("   ");
+                else printf(RED"%d  "RESETCOLOR, c);
             }
             else{
-                if(coluna == -1) printf(RED"%d  "RESETCOLOR  , linha);
-                else printf("%c  ", tabuleiro[linha][coluna]);
+                if(c == -1) printf(RED"%d  "RESETCOLOR  , l);
+                else {
+                    // Mar = azul escuro 
+                    if(tabuleiro[l][c] == '~'){
+                        printf(DARKBLUE"%c  "RESETCOLOR, tabuleiro[l][c]);
+                    }
+
+                    // Número = cinza 
+                    else if(tabuleiro[l][c] > '0' && tabuleiro[l][c] <= '9'){
+                        printf(GRAY"%c  "RESETCOLOR, tabuleiro[l][c]);
+                    }
+
+                    // Navio = preto negrito 
+                    else if(tabuleiro[l][c] >= 'A' && tabuleiro[l][c] < 'Z'){
+                        printf(DARKBLACK"%c  "RESETCOLOR, tabuleiro[l][c]);
+                    }
+
+                    else printf("%c  ", tabuleiro[l][c]);
+                }
             }
             
         }
         printf("\n");
     }
+    printf(RESETCOLOR);
     printf("Tiros: %d \tNavios: %d\tEspeciais: %d\n\n", numTiros, qtdNaviosAtivos, numPowers);
 }
 
@@ -114,14 +135,14 @@ void printTabChecagem (){
     }
 }
 
-// Retornar 1 se encontrar algum navio ao redor
-int getQtdNavioRedor(int X, int Y){
+// Retorna a quantidade de navios ao redor da posicao fornecida
+int getQtdNavioRedor(int Y, int X){
     int qtd=0;
 
     for (int l = Y-1 ; l <= Y+1 ; l++){
         for (int c = X-1 ; c <= X+1 ; c++){
             if(l >= 0 && l < tamLinha && c >= 0 && c < tamColuna && !(l == Y && c == X)){ //limita a checagem só para posições validas (dentro do tabuleiro)
-                if(tabNavios[l][c] != '~'){
+                if(tabNavios[l][c] >= 'A' && tabNavios[l][c] <= 'Z'){
                     qtd++;
                 }
             }
@@ -134,7 +155,7 @@ int getQtdNavioRedor(int X, int Y){
 int buscaNavio(int tamNavio, int X, int Y, int direcao){
     int coluna = X, linha = Y, i=0;
     while (i < tamNavio){
-        if(tabNavios[linha][coluna] != '~'){
+        if(tabNavios[linha][coluna] >= 'A' && tabNavios[linha][coluna] <= 'Z'){
             printf("Navio encontrado em (%d, %d)\n", linha, coluna);
             return 1;
         }
@@ -248,7 +269,7 @@ int addNavio(int tamNavio, int X, int Y, int direcao){
     //Adiciona o navio no tabuleiro
     int linha = Y, coluna = X, i=0;
     while (i < tamNavio){
-        tabNavios[linha][coluna] = qtdNaviosAtivos + '0';
+        tabNavios[linha][coluna] = qtdNaviosAtivos + 'A';
         if (direcao == 1) linha++;
         if (direcao == 2){
             linha++;
@@ -345,7 +366,7 @@ int countPartesDestruidasNavio(int Y, int X){
     visitado[Y][X] = target;
 
     // Conta como parte destruída se foi atingida
-    countDestruido = (tabuleiro[Y][X] == 'X') ? 1 : 0;
+    countDestruido = (tabuleiro[Y][X] == '#') ? 1 : 0;
 
     // Verifica vizinhos 
     //Procura o ID do navio nas redondezas
@@ -394,13 +415,13 @@ int attack(int linha, int coluna){
     }
 
     //Verifica se acertou um navio
-    if(target >= '0' && target <= '0' + configNumNavios){
+    if(target >= 'A' && target < 'Z' + configNumNavios){
         printf("Navio atingido!\n");
         hit = 1;
 
         //Não deixa substituir por X se acertar novamente um navio já destruido 
         if(tabuleiro[linha][coluna] != target)
-            tabuleiro[linha][coluna] = 'X';
+            tabuleiro[linha][coluna] = '#';
 
         //Verifica se o navio foi destruído
         if(checkNavioDestruido(linha, coluna)) {
@@ -410,8 +431,8 @@ int attack(int linha, int coluna){
         }
     
     } 
-    else if(buscaNavio(linha, coluna)){
-        tabuleiro[linha][coluna] = RED'*'RESETCOLOR;
+    else if(getQtdNavioRedor(linha, coluna) > 0){
+        tabuleiro[linha][coluna] = '0' + getQtdNavioRedor(linha,coluna);
         printf("Tiro na água\n");
     }
     else{
@@ -549,6 +570,7 @@ void menuJogo(){
 
     do{
         system("clear");
+        printTabGabarito();
         printTabuleiro();
         printf("MENU DO JOGO:\n");
         if(numTiros > 0) printf("1 - Atirar\n");
@@ -643,7 +665,11 @@ void menuPrincipal(){
             "================================\n\n"
             "Este é um jogo Single Player.\n"
             "Seu objetivo é destruir todos os navios no tabuleiro.\n"
+            "Cada navio é representado por uma letra de A a J.\n"
             "Os navios podem estar posicinados de forma horizontal, vertical ou diagonal, e possuem tamanho de 2 a 5.\n"
+            "Sempre que você acertar uma parte do navio será marcado com #.\n"
+            "Números aparecerão no tabuleiro indicando quantos navios existem em sua redondeza.\n"
+            "Você pode usar tiros especiais em forma de triângulo, losangulo ou cruz para acertar vários alvos de uma vez.\n"
             "Descubra a posição dos navios e use seus tiros e poderes para destrui-los! \n\n"
             
             RED"MENU PRINCIPAL:\n"RESETCOLOR

@@ -405,7 +405,7 @@ int attack(int linha, int coluna){
     int hit = 0; // se acertou um navio se torna 1
 
     if(linha < 0 || coluna < 0 || linha >= tamLinha || coluna >= tamColuna){
-        printf("\Fora do tabuleiro\n");
+        printf("Fora do tabuleiro\n");
         return 0;
     }
     

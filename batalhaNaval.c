@@ -434,6 +434,7 @@ int attack(int linha, int coluna){
     else if(getQtdNavioRedor(linha, coluna) > 0){
         tabuleiro[linha][coluna] = '0' + getQtdNavioRedor(linha,coluna);
         printf("Tiro na água\n");
+        return 1;
     }
     else{
         tabuleiro[linha][coluna] = '*';
@@ -561,6 +562,26 @@ int lerInteiroBetween(const char *mensagem, int min, int max) {
     }
 }
 
+// Mostra as instruções do jogo
+void printInstruções(){
+    printf(
+            "\nINSTRUÇÕES\n"
+            "\nEste é um jogo Single Player.\n"
+            "Seu objetivo é descobrir onde estão os navios no tabuleiro e destruí-los!.\n\n"
+
+            "- NAVIOS -\n"
+            "Cada navio é representado por uma letra de "DARKBLACK"A a J.\n"RESETCOLOR
+            "Podem estar posicinados de forma "DARKBLACK"Horizontal, Vertical ou Diagonal.\n"RESETCOLOR
+            "Seus tamanhos variam de "DARKBLACK"2 a 5 casas"RESETCOLOR".\n"
+            "As "DARKBLACK"partes atingidas "RESETCOLOR" dos navios são representados por um "DARKBLACK"#"RESETCOLOR".\n\n"
+
+            "- DICAS -\n"
+            DARKBLACK"Números"RESETCOLOR" aparecerão no tabuleiro indicando "DARKBLACK"quantos navios existem ao redor dele.\n"RESETCOLOR
+            "Você pode usar "DARKBLACK"tiros especiais "RESETCOLOR"em forma de triângulo, losangulo ou cruz para acertar vários alvos de uma vez.\n"
+            "Embaixo do tabuleiro é exibido quantos tiros, navios e especiais restam no jogo.\n\n"
+        );
+}
+
 //Menu com o jogo ativo
 void menuJogo(){
     int selectMenu=-1;
@@ -571,9 +592,10 @@ void menuJogo(){
     do{
         system("clear");
         printTabuleiro();
-        printf("MENU DO JOGO:\n");
+        printf("Escolha a sua ação:\n");
         if(numTiros > 0) printf("1 - Atirar\n");
         if(numPowers > 0) printf("2 - Usar Especial\n");
+        printf("8 - Ler as instruções\n");
         printf("9 - Reiniciar\n");
         printf("0 - Finalizar\n");
         selectMenu = lerInteiro("");
@@ -613,6 +635,11 @@ void menuJogo(){
                 initAttackSuper(superpoder, X, Y, tamanho);
                 break;
 
+            case 8:
+                printInstruções();
+                int exit = lerInteiro("Digite 1 para continuar... ");
+                break;
+            
             case 9:
                 confirma = lerInteiroBetween("Você tem certeza que deseja reiniciar o jogo? \n1 - Sim \n2 - Não\n", 1, 2);
                 if(confirma == 2) break;
@@ -657,23 +684,19 @@ void menuPrincipal(){
     
     do{
         system("clear");
+        printf(
+            "==================================\n"
+            RED"          BATALHA NAVAL\n"RESETCOLOR
+            "==================================\n"
+        );
+
+        printInstruções();
 
         printf(
-            "================================\n"
-            RED"\tBATALHA NAVAL\n"RESETCOLOR
-            "================================\n\n"
-            "Este é um jogo Single Player.\n"
-            "Seu objetivo é destruir todos os navios no tabuleiro.\n"
-            "Cada navio é representado por uma letra de A a J.\n"
-            "Os navios podem estar posicinados de forma horizontal, vertical ou diagonal, e possuem tamanho de 2 a 5.\n"
-            "Sempre que você acertar uma parte do navio será marcado com #.\n"
-            "Números aparecerão no tabuleiro indicando quantos navios existem em sua redondeza.\n"
-            "Você pode usar tiros especiais em forma de triângulo, losangulo ou cruz para acertar vários alvos de uma vez.\n"
-            "Descubra a posição dos navios e use seus tiros e poderes para destrui-los! \n\n"
-            
             RED"MENU PRINCIPAL:\n"RESETCOLOR
             "1 - Iniciar Jogo\n"
-            "0 - Finalizar\n");
+            "0 - Finalizar\n"
+        );
 
         selectMenu = lerInteiro("");
         printf("\n");

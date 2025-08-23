@@ -570,7 +570,6 @@ void menuJogo(){
 
     do{
         system("clear");
-        printTabGabarito();
         printTabuleiro();
         printf("MENU DO JOGO:\n");
         if(numTiros > 0) printf("1 - Atirar\n");

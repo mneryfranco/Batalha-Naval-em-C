@@ -44,7 +44,7 @@ int tamanhoMaxNavio(){
 void inicializarTabuleiro (){
     qtdNaviosAtivos = 0;
     numTiros = 30;
-    numPowers = 100;
+    numPowers = 4;
     configNumNavios = 6;
 
     for(int i=0; i<tamLinha; i++){
@@ -77,8 +77,8 @@ void printTabuleiro (){
 }
 
 // Imprime o tabuleiro de navios escondidos
-void printTabNavios (){
-    printf("\n\nNAVIOS\n");
+void printTabGabarito (){
+    printf("\n\nGABARITO\n");
     for(int linha=-1; linha<tamLinha; linha++){
         for (int coluna=-1; coluna<tamColuna; coluna++){
             if(linha == -1){
@@ -402,8 +402,12 @@ int attack(int linha, int coluna){
     return hit;
 }
 
-// Função de ataque com a bomba. Retorna 1 se tiver sucesso
-int atirar(int linha, int coluna){
+// Função de ataque simples. Retorna 1 se tiver sucesso
+int tiroSimples(int linha, int coluna){
+    if(numTiros <= 0){
+        printf("Tiros insuficientes");
+        return 0;
+    }
     if(attack(linha,coluna)){
         numTiros--;
         return 1;
@@ -413,25 +417,12 @@ int atirar(int linha, int coluna){
     }
 }
 
-// Usada pelas funções de super poder para atacar
+// Usada pelas funções de super poder para atacar uma célula do tabuleiro
 int attackPoder(int linha, int coluna, int tam){    
     if(attack(linha,coluna)){
         return 1;
     }
     else return 0;
-}
-
-int initAttackSuper(int superpoder, int X, int Y, int tam){
-    if(numPowers < tam){
-        printf("Você não tem poder especial suficiente\n");
-        return 0;
-    }
-    if(superpoder == 1) usarPoderTriangulo(X, Y, tam);
-    if(superpoder == 2) usarPoderLosangulo(X, Y, tam);
-    if(superpoder == 3) usePoderCruz(X, Y, tam);
-    
-    numPowers = numPowers - tam;
-    return 1;
 }
 
 // Executa um super poder no tabuleiro em forma de cone
@@ -480,17 +471,48 @@ int usePoderCruz(int X, int Y, int tam){
     }
 }
 
+// Faz a seleção do super poder e chama a função respectiva
+int initAttackSuper(int superpoder, int X, int Y, int tam){
+    if(numPowers < tam){
+        printf("Você não tem poder especial suficiente\n");
+        return 0;
+    }
+    if(superpoder == 1) usarPoderTriangulo(X, Y, tam);
+    if(superpoder == 2) usarPoderLosangulo(X, Y, tam);
+    if(superpoder == 3) usePoderCruz(X, Y, tam);
+    
+    numPowers = numPowers - tam;
+    return 1;
+}
+
+// Função auxiliar para ler um inteiro com validação
+int lerInteiro(const char *mensagem, int min, int max) {
+    int valor;
+    char c;
+    while (1) {
+        printf("%s", mensagem);
+        if (scanf("%d", &valor) == 1 && valor >= min && valor <= max) {
+            // Limpa o buffer após leitura válida
+            while ((c = getchar()) != '\n' && c != EOF);
+            return valor;
+        }
+        printf("Entrada inválida! Digite um número entre %d e %d.\n\n", min, max);
+        // Limpa o buffer após leitura inválida
+        while ((c = getchar()) != '\n' && c != EOF);
+    }
+}
+
 //Menu com o jogo ativo
 void menuJogo(){
-    int selectMenu=0;
-    int tamanho=0, X=0, Y=0, direcao=0;
-    int qtdNavios=0, superpoder=0;
+    int selectMenu=-1;
+    int tamanho=-1, X=-1, Y=-1, direcao=-1;
+    int qtdNavios=-1, superpoder=-1;
 
     do{
         system("clear");
         printTabuleiro();
         printf("MENU DO JOGO:\n");
-        printf("1 - Atirar\n");
+        if(numTiros > 0) printf("1 - Atirar\n");
         if(numPowers > 0) printf("2 - Usar Especial\n");
         printf("9 - Reiniciar\n");
         printf("0 - Finalizar\n");
@@ -499,31 +521,32 @@ void menuJogo(){
 
         switch (selectMenu){
             case 1:
-                printf("Linha: ");
-                scanf("%d", &Y);
-                printf("Coluna: ");
-                scanf("%d", &X);
-                atirar(Y,X);
+                if(numTiros <= 0){
+                    printf("Você não tem tiros suficientes");
+                    break;
+                }
+                Y = lerInteiro("Linha: ", 0, tamLinha - 1);
+                X = lerInteiro("Coluna: ", 0, tamColuna - 1);
+                tiroSimples(Y,X);
                 break;
 
             case 2:
+                if(numPowers <= 0){
+                    printf("Você não tem especiais suficientes");
+                    break;
+                }
                 printf("Escolha o super poder:\n");
                 printf("1 - Triangulo\n");
                 printf("2 - Losangulo\n");
                 printf("3 - Cruz\n");
                 printf("0 - Cancelar\n");
-                do scanf("%d", &superpoder);
-                while (superpoder < 0 || superpoder > 3);
+                superpoder = lerInteiro("Opção: ", 0, 3);
                 if(superpoder == 0) break;
 
                 printf("Defina o ponto central:\n");
-                printf("Linha: ");
-                scanf("%d", &Y);
-                printf("Coluna: ");
-                scanf("%d", &X);
-                printf("Tamanho (1 ou 2): ");
-                do scanf("%d", &tamanho);
-                while (tamanho < 1 || tamanho > 2);
+                Y = lerInteiro("Linha: ", 0, tamLinha - 1);
+                X = lerInteiro("Coluna: ", 0, tamColuna - 1);
+                tamanho = lerInteiro("Tamanho (1 ou 2): ", 1, 2);
 
                 initAttackSuper(superpoder, X, Y, tamanho);
                 break;
@@ -535,7 +558,6 @@ void menuJogo(){
                 break;
             
             case 0: 
-                printTabNavios();
                 break;
             
             default:
@@ -543,18 +565,26 @@ void menuJogo(){
                 break;
                        
         }
-
         sleep(1);
 
     } while (selectMenu != 0 && ((numTiros > 0 || numPowers > 0) && qtdNaviosAtivos > 0));
     
-    if(qtdNaviosAtivos > 0) printf("\nVocê perdeu! =/\n");
-    if(qtdNaviosAtivos <= 0) printf("\nParabéns! Você venceu!\n");
+    // Se o jogo acabou sem o usuário pedir pra finalizar, mostrar os resultados
+    if(selectMenu != 0){
+        int exit=0;
 
-    do{
+        system("clear");
+        printTabuleiro();
+        printTabGabarito();
+
+        if(qtdNaviosAtivos > 0) printf("\nVocê perdeu! =/\n");
+        if(qtdNaviosAtivos <= 0) printf("\nParabéns! Você venceu!\n");
+
+        do{
         printf("\nPressione 1 para continuar...");
-        scanf("%d", &selectMenu);
-    } while (selectMenu != 1); 
+        scanf("%d", &exit);
+        } while (exit != 1); 
+    }
     
     menuPrincipal();
 }

@@ -7,7 +7,7 @@
 #define RED "\033[31m"
 #define DARKBLUE "\033[34m"
 #define DARKBLACK "\033[1m"
-#define GRAY "\033[37m"
+#define GRAY "\033[97m"
 #define RESETCOLOR "\033[0m"
 
 int tamLinha = 10, tamColuna = 10; // quantidade de linhas e colunas do tabuleiro

@@ -11,7 +11,6 @@ int tamLinha = 10, tamColuna = 10; // quantidade de linhas e colunas do tabuleir
 char tabuleiro[14][14]; // matriz do tabuleiro que será mostrada na tela
 int tabNavios[14][14]; // guarda a informação de onde estão os navios
 int visitado[14][14]; // usado em algoritmos de busca e checagem de navios
-int countDestruido, countTamNavio; // usado em algoritmos de busca e checagem de navios
 int configNumNavios; // quantos navios vão ser adicionados no jogo
 int qtdNaviosAtivos; // quantos navios estão ativos em jogo, ou seja, ainda não foram destruidos
 int numTiros ;
@@ -45,7 +44,7 @@ int tamanhoMaxNavio(){
 void inicializarTabuleiro (){
     qtdNaviosAtivos = 0;
     numTiros = 30;
-    numPowers = 4;
+    numPowers = 100;
     configNumNavios = 6;
 
     for(int i=0; i<tamLinha; i++){
@@ -94,7 +93,6 @@ void printTabNavios (){
         }
         printf("\n");
     }
-    printf("Tiros: %d \tNavios: %d\tEspeciais: %d\n\n", numTiros, qtdNaviosAtivos, numPowers);
 }
 
 // Imprime o tabuleiro de checagem de navios
@@ -266,8 +264,9 @@ int addNavioRandom (){
 }
 
 // Retorna o tamanho de um navio dado uma posição inicial dele
-int getTamanhoNavio(int Y, int X, char target){
+int getTamanhoNavio(int Y, int X){
     int tam=0;
+    char target;
 
     if (Y < 0 || Y >= tamLinha || X < 0 || X >= tamColuna)
         return 0;
@@ -290,27 +289,33 @@ int getTamanhoNavio(int Y, int X, char target){
     
     // Marca como visitado
     visitado[Y][X] = target;
-    printTabChecagem();
 
     //Procura o ID do navio nas redondezas
     for (int l = Y-1 ; l <= Y+1 ; l++){
         for (int c = X-1 ; c <= X+1 ; c++){
             if(l >= 0 && l < tamLinha && c >= 0 && c < tamColuna && !(l == Y && c == X)){ //limita a checagem só para posições validas (dentro do tabuleiro)
                 if(tabNavios[l][c] == target && visitado[l][c] != target){
-                    tam += getTamanhoNavio(l, c, target);
+                    tam += getTamanhoNavio(l, c);
                 }
             }
         }
     }
     visitado[Y][X] = '~';
-    printTabChecagem();
     return tam;
 }
 
 // Conta quantas partes do navio foram destruidas
-int countPartesDestruidasNavio(int Y, int X, char target){
+int countPartesDestruidasNavio(int Y, int X){
+    char target;
+    int countDestruido=0;
+
     if (Y < 0 || Y >= tamLinha || X < 0 || X >= tamColuna)
         return 0;
+    
+    // Verifica se tem navio na posição Y,X
+    if (tabNavios[Y][X] == '~')
+        return 0;
+    else target = tabNavios[Y][X];
     
     // Verifica se já foi visitado
     if (visitado[Y][X] == target)
@@ -323,35 +328,37 @@ int countPartesDestruidasNavio(int Y, int X, char target){
     // Marca como visitado
     visitado[Y][X] = target;
 
-    // Conta como parte do navio
-    countTamNavio++;
-
     // Conta como parte destruída se foi atingida
-    int destruido = (tabuleiro[Y][X] != '~') ? 1 : 0;
-
-    printTabChecagem();
+    countDestruido = (tabuleiro[Y][X] == 'X') ? 1 : 0;
 
     // Verifica vizinhos 
-    countDestruido += countPartesDestruidasNavio(Y-1, X-1, target);
-    countDestruido += countPartesDestruidasNavio(Y-1, X, target);
-    countDestruido += countPartesDestruidasNavio(Y-1, X+1, target);
-    countDestruido += countPartesDestruidasNavio(Y, X-1, target);
-    countDestruido += countPartesDestruidasNavio(Y, X+1, target);
-    countDestruido += countPartesDestruidasNavio(Y+1, X-1, target);
-    countDestruido += countPartesDestruidasNavio(Y+1, X, target);
-    countDestruido += countPartesDestruidasNavio(Y+1, X+1, target);
+    //Procura o ID do navio nas redondezas
+    for (int l = Y-1 ; l <= Y+1 ; l++){
+        for (int c = X-1 ; c <= X+1 ; c++){
+            if(l >= 0 && l < tamLinha && c >= 0 && c < tamColuna && !(l == Y && c == X)){ //limita a checagem só para posições validas (dentro do tabuleiro)
+                if(tabNavios[l][c] == target && visitado[l][c] != target){
+                    countDestruido += countPartesDestruidasNavio(l, c);
+                }
+            }
+        }
+    }
     
-    printTabChecagem();
-
-    return destruido;
+    visitado[Y][X] = '~';
+    return countDestruido;
 }
 
 // Verifica se o navio foi destruido, ou seja, se todas suas partes foram atacadas
 int checkNavioDestruido(int Y, int X){
-    char target = tabNavios[Y][X]; //armazena o char da posição que foi atacado
+    if (Y < 0 || Y >= tamLinha || X < 0 || X >= tamColuna)
+        return 0;
     
-    int partesDestruidas = countPartesDestruidasNavio(Y, X, target);
-    int tamNavio; 
+    // Verifica se tem navio na posição Y,X
+    if (tabNavios[Y][X] == '~')
+        return 0;
+    
+    if(getTamanhoNavio(Y,X) == countPartesDestruidasNavio(Y,X))
+        return 1;
+    else return 0;
     
 }
 
@@ -359,13 +366,16 @@ int checkNavioDestruido(int Y, int X){
 int attack(int linha, int coluna){
     char target = tabNavios[linha][coluna]; //armazena o char da posição que foi atacado
     int hit = 0; // se acertou um navio se torna 1
-    int checkNavioDestruido = 1; //será usada para checar se existe em torno desta posição outro char = target, ou seja, outra parte do navio
 
     if(linha < 0 || coluna < 0 || linha >= tamLinha || coluna >= tamColuna){
         printf("Fora do tabuleiro!\n");
         return 0;
     }
     
+    if(tabuleiro[linha][coluna] != '~'){
+        printf("Alvo repetido");
+        return 0;
+    }
 
     //Verifica se acertou um navio
     if(target >= '0' && target <= '0' + configNumNavios){
@@ -377,18 +387,7 @@ int attack(int linha, int coluna){
             tabuleiro[linha][coluna] = 'X';
 
         //Verifica se o navio foi destruído
-        for(int l = linha-1 ; l <= linha+1 ; l++){
-            for(int c = coluna-1 ; c <= coluna+1 ; c++){
-                if(l >= 0 && l < tamLinha && c >= 0 && c < tamColuna){ //limita a checagem só para posições validas (dentro do tabuleiro)
-                    if(tabNavios[l][c] == target && tabuleiro[l][c] != target) {
-                        checkNavioDestruido = 0;
-                        break;
-                    }
-                }
-            }
-            if(checkNavioDestruido==0) break;
-        }
-        if(checkNavioDestruido == 1) {
+        if(checkNavioDestruido(linha, coluna)) {
             printf("NAVIO DESTRUIDO!\n");
             qtdNaviosAtivos--;
             revelaNavioDestruido(linha, coluna);
@@ -402,9 +401,9 @@ int attack(int linha, int coluna){
 }
 
 // Função de ataque com a bomba. Retorna 1 se tiver sucesso
-int attackBomba(int linha, int coluna){
-    numTiros--;
+int atirar(int linha, int coluna){
     if(attack(linha,coluna)){
+        numTiros--;
         return 1;
     }
     else {
@@ -426,8 +425,8 @@ int initAttackSuper(int superpoder, int X, int Y, int tam){
         printf("Você não tem poder especial suficiente\n");
         return 0;
     }
-    if(superpoder == 1) usePoderCone(X, Y, tam);
-    if(superpoder == 2) usePoderOcta(X, Y, tam);
+    if(superpoder == 1) usarPoderTriangulo(X, Y, tam);
+    if(superpoder == 2) usarPoderLosangulo(X, Y, tam);
     if(superpoder == 3) usePoderCruz(X, Y, tam);
     
     numPowers = numPowers - tam;
@@ -435,7 +434,7 @@ int initAttackSuper(int superpoder, int X, int Y, int tam){
 }
 
 // Executa um super poder no tabuleiro em forma de cone
-int usePoderCone(int X, int Y, int tam){
+int usarPoderTriangulo(int X, int Y, int tam){
     int largura = 0, altura = 0;
     int linha = Y-tam;
     int coluna = X;
@@ -451,7 +450,7 @@ int usePoderCone(int X, int Y, int tam){
 }
 
 // Executa um super poder no tabuleiro em forma de octaedro
-int usePoderOcta(int X, int Y, int tam){
+int usarPoderLosangulo(int X, int Y, int tam){
     int largura;
     int linha = Y-tam;
     int coluna = X;
@@ -487,14 +486,11 @@ void menuJogo(){
     int qtdNavios=0, superpoder=0;
 
     do{
-        //system("clear");
+        system("clear");
         printTabuleiro();
-        printTabChecagem();
-        printTabNavios();
         printf("MENU DO JOGO:\n");
         printf("1 - Atirar\n");
         if(numPowers > 0) printf("2 - Usar Especial\n");
-        printf("8 - getTamNavio\n");
         printf("9 - Reiniciar\n");
         printf("0 - Finalizar\n");
         scanf("%d", &selectMenu);
@@ -506,13 +502,13 @@ void menuJogo(){
                 scanf("%d", &Y);
                 printf("Coluna: ");
                 scanf("%d", &X);
-                attackBomba(Y,X);
+                atirar(Y,X);
                 break;
 
             case 2:
                 printf("Escolha o super poder:\n");
-                printf("1 - Cone\n");
-                printf("2 - Octaedro\n");
+                printf("1 - Triangulo\n");
+                printf("2 - Losangulo\n");
                 printf("3 - Cruz\n");
                 printf("0 - Cancelar\n");
                 do scanf("%d", &superpoder);
@@ -529,14 +525,6 @@ void menuJogo(){
                 while (tamanho < 1 || tamanho > 2);
 
                 initAttackSuper(superpoder, X, Y, tamanho);
-                break;
-            
-            case 8:
-                printf("Linha: ");
-                scanf("%d", &Y);
-                printf("Coluna: ");
-                scanf("%d", &X);
-                printf("\nTamanho do Navio: %d\n", getTamanhoNavio(Y, X, NULL));
                 break;
 
             case 9:

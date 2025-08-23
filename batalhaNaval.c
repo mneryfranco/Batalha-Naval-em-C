@@ -373,8 +373,8 @@ int attack(int linha, int coluna){
     }
     
     if(tabuleiro[linha][coluna] != '~'){
-        printf("Alvo repetido");
-        return 0;
+        printf("Alvo repetido. Tiro desperdiçado!\n");
+        return 1;
     }
 
     //Verifica se acertou um navio
@@ -395,6 +395,8 @@ int attack(int linha, int coluna){
     
     } else{
         tabuleiro[linha][coluna] = '*';
+        printf("Tiro na água!\n");
+        return 1;
     }
     
     return hit;
@@ -407,7 +409,6 @@ int atirar(int linha, int coluna){
         return 1;
     }
     else {
-        printf("Tiro na água!\n");
         return 0;
     }
 }

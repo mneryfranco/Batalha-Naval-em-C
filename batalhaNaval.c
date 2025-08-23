@@ -46,7 +46,7 @@ int tamanhoMaxNavio(){
 // Reseta o tabuleiro e a contagem de navios, tiros e poderes
 void inicializarTabuleiro (){
     qtdNaviosAtivos = 0;
-    numTiros = 20;
+    numTiros = 25;
     numPowers = 6;
     configNumNavios = 6;
 
@@ -571,7 +571,7 @@ void printInstruções(){
 
             "- NAVIOS -\n"
             "Cada navio é representado por uma letra de "DARKBLACK"A a J.\n"RESETCOLOR
-            "Podem estar posicinados de forma "DARKBLACK"Horizontal, Vertical ou Diagonal.\n"RESETCOLOR
+            "Podem estar posicionados de forma "DARKBLACK"Horizontal, Vertical ou Diagonal.\n"RESETCOLOR
             "Seus tamanhos variam de "DARKBLACK"2 a 5 casas"RESETCOLOR".\n"
             "As "DARKBLACK"partes atingidas "RESETCOLOR" dos navios são representados por um "DARKBLACK"#"RESETCOLOR".\n\n"
 

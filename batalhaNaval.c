@@ -199,47 +199,47 @@ int checkErrosAddNavio(int tamNavio, int X, int Y, int direcao){
     //Tratamento de erros
     //Se o usuário selecionar uma posição fora do tabuleiro, ou valores negativos, encerra.
     if(Y<0 || Y>=tamLinha){
-        printf("Erro: Linha inexistente no tabuleiro\n");
+        //printf("Erro: Linha inexistente no tabuleiro\n");
         return 1;
     }
     if(X<0 || X>=tamColuna){
-        printf("Erro: Coluna inexistente no tabuleiro\n");
+        //printf("Erro: Coluna inexistente no tabuleiro\n");
         return 1;
     }  
 
     //Encerra pra valores invalidos no tamanho do navio
     if(tamNavio > tamanhoMaxNavio()) {
-        printf("Erro: Navio muito grande. O tamanho maior é %d\n", tamanhoMaxNavio());
+        //printf("Erro: Navio muito grande. O tamanho maior é %d\n", tamanhoMaxNavio());
         return 1;
     }
     if(tamNavio <= 0) {
-        printf("Erro: Tamanho inválido para o navio");
+        //printf("Erro: Tamanho inválido para o navio");
         return 1;
     }
 
     //Encerra pra valores inválidos de direcao do navio
     if(direcao <= 0 || direcao >= 4){
-        printf("Erro: Valor inválido para direcao do navio\n");
+        //printf("Erro: Valor inválido para direcao do navio\n");
         return 1;
     }
 
     //Se o tamanho do barco exceder o tamanho do tabuleiro, encerra.
     if(direcao==1 && Y+tamNavio-1 >= tamLinha) {
-        printf("Erro: O Tamanho do navio excede o tabuleiro\n");
+        //printf("Erro: O Tamanho do navio excede o tabuleiro\n");
         return 1;
     } 
     if(direcao==2 && (X+tamNavio-1 >= tamColuna || Y+tamNavio-1 >= tamLinha)) {
-        printf("Erro: O Tamanho do navio excede o tabuleiro\n");
+        //printf("Erro: O Tamanho do navio excede o tabuleiro\n");
         return 1;
     } 
     if(direcao==3 && X+tamNavio-1 >= tamColuna) {
-        printf("Erro: O Tamanho do navio excede o tabuleiro\n");
+        //printf("Erro: O Tamanho do navio excede o tabuleiro\n");
         return 1;
     } 
 
     //Verifica se já existe um navio na posição
     if(buscaNavio(tamNavio, X, Y, direcao)){
-        printf("Erro ao tentar adicionar navio\n");
+        //printf("Erro ao tentar adicionar navio\n");
         return 1;
     }
     return 0;
@@ -257,7 +257,7 @@ int addNavio(int tamNavio, int X, int Y, int direcao){
    
     //Verifica se o tabuleiro já está em sua capacidade máxima de navios
     if(qtdNaviosAtivos >= configNumNavios){
-        printf("Tabuleiro lotado (%d navios)\n", qtdNaviosAtivos);
+        //printf("Tabuleiro lotado (%d navios)\n", qtdNaviosAtivos);
         return 0;
     }
 

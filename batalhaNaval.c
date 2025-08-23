@@ -46,7 +46,7 @@ int tamanhoMaxNavio(){
 // Reseta o tabuleiro e a contagem de navios, tiros e poderes
 void inicializarTabuleiro (){
     qtdNaviosAtivos = 0;
-    numTiros = 30;
+    numTiros = 20;
     numPowers = 6;
     configNumNavios = 6;
 

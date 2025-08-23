@@ -10,10 +10,12 @@
 int tamLinha = 10, tamColuna = 10; // quantidade de linhas e colunas do tabuleiro
 char tabuleiro[14][14]; // matriz do tabuleiro que será mostrada na tela
 int tabNavios[14][14]; // guarda a informação de onde estão os navios
-int configNumNavios = 6; // quantos navios vão ser adicionados no jogo
-int qtdNaviosAtivos = 0; // quantos navios estão ativos em jogo, ou seja, ainda não foram destruidos
-int numTiros = 30;
-int numPowers = 4;
+int visitado[14][14]; // usado em algoritmos de busca e checagem de navios
+int countDestruido, countTamNavio; // usado em algoritmos de busca e checagem de navios
+int configNumNavios; // quantos navios vão ser adicionados no jogo
+int qtdNaviosAtivos; // quantos navios estão ativos em jogo, ou seja, ainda não foram destruidos
+int numTiros ;
+int numPowers;
 
 // Retorna o menor indice (linha ou coluna)
 int menorIndice(){
@@ -39,14 +41,18 @@ int tamanhoMaxNavio(){
     return menorIndice()/2;
 }
 
-// Reseta o tabuleiro e a contagem de tiros e poderes
+// Reseta o tabuleiro e a contagem de navios, tiros e poderes
 void inicializarTabuleiro (){
     qtdNaviosAtivos = 0;
+    numTiros = 30;
+    numPowers = 4;
+    configNumNavios = 6;
 
     for(int i=0; i<tamLinha; i++){
         for (int j=0; j<tamLinha; j++){
             tabuleiro[i][j] = '~';
             tabNavios[i][j] = '~';
+            visitado[i][j] = '~';
         }
     }
 }
@@ -73,7 +79,7 @@ void printTabuleiro (){
 
 // Imprime o tabuleiro de navios escondidos
 void printTabNavios (){
-    printf("\n\n");
+    printf("\n\nNAVIOS\n");
     for(int linha=-1; linha<tamLinha; linha++){
         for (int coluna=-1; coluna<tamColuna; coluna++){
             if(linha == -1){
@@ -89,6 +95,25 @@ void printTabNavios (){
         printf("\n");
     }
     printf("Tiros: %d \tNavios: %d\tEspeciais: %d\n\n", numTiros, qtdNaviosAtivos, numPowers);
+}
+
+// Imprime o tabuleiro de checagem de navios
+void printTabChecagem (){
+    printf("\n\nCHECAGEM\n");
+    for(int linha=-1; linha<tamLinha; linha++){
+        for (int coluna=-1; coluna<tamColuna; coluna++){
+            if(linha == -1){
+                if(coluna==-1) printf("   ");
+                else printf(RED"%d  "RESETCOLOR, coluna);
+            }
+            else{
+                if(coluna == -1) printf(RED"%d  "RESETCOLOR  , linha);
+                else printf("%c  ", visitado[linha][coluna]);
+            }
+            
+        }
+        printf("\n");
+    }
 }
 
 // Procura um navio na posição informada e retorna 1 se tiver
@@ -219,7 +244,6 @@ int addNavio(int tamNavio, int X, int Y, int direcao){
         i++;
     }
     qtdNaviosAtivos++;
-    printTabNavios();
     return 1;
 }
 
@@ -241,6 +265,96 @@ int addNavioRandom (){
     return 1;
 }
 
+// Retorna o tamanho de um navio dado uma posição inicial dele
+int getTamanhoNavio(int Y, int X, char target){
+    int tam=0;
+
+    if (Y < 0 || Y >= tamLinha || X < 0 || X >= tamColuna)
+        return 0;
+    
+    // Verifica se tem navio na posição Y,X
+    if (tabNavios[Y][X] == '~')
+        return 0;
+    else {
+        target = tabNavios[Y][X];
+        tam++;
+    }
+
+    // Verifica se já foi visitado
+    if (visitado[Y][X] == target)
+        return 0;
+    
+    // Verifica se é parte do navio
+    if (tabNavios[Y][X] != target)
+        return 0;
+    
+    // Marca como visitado
+    visitado[Y][X] = target;
+    printTabChecagem();
+
+    //Procura o ID do navio nas redondezas
+    for (int l = Y-1 ; l <= Y+1 ; l++){
+        for (int c = X-1 ; c <= X+1 ; c++){
+            if(l >= 0 && l < tamLinha && c >= 0 && c < tamColuna && !(l == Y && c == X)){ //limita a checagem só para posições validas (dentro do tabuleiro)
+                if(tabNavios[l][c] == target && visitado[l][c] != target){
+                    tam += getTamanhoNavio(l, c, target);
+                }
+            }
+        }
+    }
+    visitado[Y][X] = '~';
+    printTabChecagem();
+    return tam;
+}
+
+// Conta quantas partes do navio foram destruidas
+int countPartesDestruidasNavio(int Y, int X, char target){
+    if (Y < 0 || Y >= tamLinha || X < 0 || X >= tamColuna)
+        return 0;
+    
+    // Verifica se já foi visitado
+    if (visitado[Y][X] == target)
+        return 0;
+    
+    // Verifica se é parte do navio
+    if (tabNavios[Y][X] != target)
+        return 0;
+
+    // Marca como visitado
+    visitado[Y][X] = target;
+
+    // Conta como parte do navio
+    countTamNavio++;
+
+    // Conta como parte destruída se foi atingida
+    int destruido = (tabuleiro[Y][X] != '~') ? 1 : 0;
+
+    printTabChecagem();
+
+    // Verifica vizinhos 
+    countDestruido += countPartesDestruidasNavio(Y-1, X-1, target);
+    countDestruido += countPartesDestruidasNavio(Y-1, X, target);
+    countDestruido += countPartesDestruidasNavio(Y-1, X+1, target);
+    countDestruido += countPartesDestruidasNavio(Y, X-1, target);
+    countDestruido += countPartesDestruidasNavio(Y, X+1, target);
+    countDestruido += countPartesDestruidasNavio(Y+1, X-1, target);
+    countDestruido += countPartesDestruidasNavio(Y+1, X, target);
+    countDestruido += countPartesDestruidasNavio(Y+1, X+1, target);
+    
+    printTabChecagem();
+
+    return destruido;
+}
+
+// Verifica se o navio foi destruido, ou seja, se todas suas partes foram atacadas
+int checkNavioDestruido(int Y, int X){
+    char target = tabNavios[Y][X]; //armazena o char da posição que foi atacado
+    
+    int partesDestruidas = countPartesDestruidasNavio(Y, X, target);
+    int tamNavio; 
+    
+}
+
 // Ataca uma posição do tabuleiro. Retorna 1 se atingir um navio.
 int attack(int linha, int coluna){
     char target = tabNavios[linha][coluna]; //armazena o char da posição que foi atacado
@@ -251,18 +365,22 @@ int attack(int linha, int coluna){
         printf("Fora do tabuleiro!\n");
         return 0;
     }
+    
 
     //Verifica se acertou um navio
     if(target >= '0' && target <= '0' + configNumNavios){
         printf("Navio atingido!\n");
         hit = 1;
-        tabuleiro[linha][coluna] = 'X';
+
+        //Não deixa substituir por X se acertar novamente um navio já destruido 
+        if(tabuleiro[linha][coluna] != target)
+            tabuleiro[linha][coluna] = 'X';
 
         //Verifica se o navio foi destruído
         for(int l = linha-1 ; l <= linha+1 ; l++){
             for(int c = coluna-1 ; c <= coluna+1 ; c++){
                 if(l >= 0 && l < tamLinha && c >= 0 && c < tamColuna){ //limita a checagem só para posições validas (dentro do tabuleiro)
-                    if(tabNavios[l][c] == target && tabuleiro[l][c] != 'X') {
+                    if(tabNavios[l][c] == target && tabuleiro[l][c] != target) {
                         checkNavioDestruido = 0;
                         break;
                     }
@@ -362,47 +480,6 @@ int usePoderCruz(int X, int Y, int tam){
     }
 }
 
-//Menu inicial 
-void menuPrincipal(){
-    int selectMenu=0;
-    
-    do{
-        system("clear");
-
-        printf(
-            "================================\n"
-            RED"\tBATALHA NAVAL\n"RESETCOLOR
-            "================================\n\n"
-            "Este é um jogo Single Player.\n"
-            "Seu objetivo é destruir todos os navios no tabuleiro.\n"
-            "Os navios podem estar posicinados de forma horizontal, vertical ou diagonal, e possuem tamanho de 2 a 5.\n"
-            "Descubra a posição dos navios e use seus tiros e poderes para destrui-los! \n\n"
-            
-            RED"MENU PRINCIPAL:\n"RESETCOLOR
-            "1 - Iniciar Jogo\n"
-            "0 - Finalizar\n");
-
-        scanf("%d", &selectMenu);
-        printf("\n");
-
-        switch (selectMenu){
-            case 1:
-                inicializarTabuleiro();
-                addNavioRandom(configNumNavios);
-                menuJogo();
-                break;
-            
-            case 0:
-                break;
-            
-            default:
-                printf("Opção Inválida\n");
-        }
-        sleep(1);
-    } while(selectMenu < 0 || selectMenu > 1);
-
-}
-
 //Menu com o jogo ativo
 void menuJogo(){
     int selectMenu=0;
@@ -410,13 +487,16 @@ void menuJogo(){
     int qtdNavios=0, superpoder=0;
 
     do{
-        system("clear");
+        //system("clear");
         printTabuleiro();
+        printTabChecagem();
+        printTabNavios();
         printf("MENU DO JOGO:\n");
         printf("1 - Atirar\n");
         if(numPowers > 0) printf("2 - Usar Especial\n");
-        printf("9 - Reiniciar Jogo\n");
-        printf("0 - Revelar tabuleiro e Finalizar\n");
+        printf("8 - getTamNavio\n");
+        printf("9 - Reiniciar\n");
+        printf("0 - Finalizar\n");
         scanf("%d", &selectMenu);
         printf("\n");
 
@@ -450,10 +530,18 @@ void menuJogo(){
 
                 initAttackSuper(superpoder, X, Y, tamanho);
                 break;
+            
+            case 8:
+                printf("Linha: ");
+                scanf("%d", &Y);
+                printf("Coluna: ");
+                scanf("%d", &X);
+                printf("\nTamanho do Navio: %d\n", getTamanhoNavio(Y, X, NULL));
+                break;
 
             case 9:
                 inicializarTabuleiro();
-                addNavioRandom(configNumNavios);
+                addNavioRandom();
                 system("clear");
                 break;
             
@@ -480,6 +568,47 @@ void menuJogo(){
     } while (selectMenu != 1); 
     
     menuPrincipal();
+}
+
+//Menu inicial 
+void menuPrincipal(){
+    int selectMenu=0;
+    
+    do{
+        system("clear");
+
+        printf(
+            "================================\n"
+            RED"\tBATALHA NAVAL\n"RESETCOLOR
+            "================================\n\n"
+            "Este é um jogo Single Player.\n"
+            "Seu objetivo é destruir todos os navios no tabuleiro.\n"
+            "Os navios podem estar posicinados de forma horizontal, vertical ou diagonal, e possuem tamanho de 2 a 5.\n"
+            "Descubra a posição dos navios e use seus tiros e poderes para destrui-los! \n\n"
+            
+            RED"MENU PRINCIPAL:\n"RESETCOLOR
+            "1 - Iniciar Jogo\n"
+            "0 - Finalizar\n");
+
+        scanf("%d", &selectMenu);
+        printf("\n");
+
+        switch (selectMenu){
+            case 1:
+                inicializarTabuleiro();
+                addNavioRandom();
+                menuJogo();
+                break;
+            
+            case 0:
+                break;
+            
+            default:
+                printf("Opção Inválida\n");
+        }
+        sleep(1);
+    } while(selectMenu < 0 || selectMenu > 1);
+
 }
 
 

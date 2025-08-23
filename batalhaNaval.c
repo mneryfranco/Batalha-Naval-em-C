@@ -43,8 +43,8 @@ int tamanhoMaxNavio(){
 // Reseta o tabuleiro e a contagem de navios, tiros e poderes
 void inicializarTabuleiro (){
     qtdNaviosAtivos = 0;
-    numTiros = 30;
-    numPowers = 4;
+    numTiros = 1;
+    numPowers = 0;
     configNumNavios = 6;
 
     for(int i=0; i<tamLinha; i++){
@@ -112,6 +112,22 @@ void printTabChecagem (){
         }
         printf("\n");
     }
+}
+
+// Retornar 1 se encontrar algum navio ao redor
+int getQtdNavioRedor(int X, int Y){
+    int qtd=0;
+
+    for (int l = Y-1 ; l <= Y+1 ; l++){
+        for (int c = X-1 ; c <= X+1 ; c++){
+            if(l >= 0 && l < tamLinha && c >= 0 && c < tamColuna && !(l == Y && c == X)){ //limita a checagem só para posições validas (dentro do tabuleiro)
+                if(tabNavios[l][c] != '~'){
+                    qtd++;
+                }
+            }
+        }
+    }
+    return qtd;
 }
 
 // Procura um navio na posição informada e retorna 1 se tiver
@@ -393,7 +409,12 @@ int attack(int linha, int coluna){
             revelaNavioDestruido(linha, coluna);
         }
     
-    } else{
+    } 
+    else if(buscaNavio(linha, coluna)){
+        tabuleiro[linha][coluna] = RED'*'RESETCOLOR;
+        printf("Tiro na água\n");
+    }
+    else{
         tabuleiro[linha][coluna] = '*';
         printf("Tiro na água\n");
         return 1;
@@ -486,7 +507,24 @@ int initAttackSuper(int superpoder, int X, int Y, int tam){
 }
 
 // Função auxiliar para ler um inteiro com validação
-int lerInteiro(const char *mensagem, int min, int max) {
+int lerInteiro(const char *mensagem) {
+    int valor;
+    char c;
+    while (1) {
+        printf("%s", mensagem);
+        if (scanf("%d", &valor) == 1) {
+            // Limpa o buffer após leitura válida
+            while ((c = getchar()) != '\n' && c != EOF);
+            return valor;
+        }
+        printf("Digite uma opção válida: ");
+        // Limpa o buffer após leitura inválida
+        while ((c = getchar()) != '\n' && c != EOF);
+    }
+}
+
+// Função auxiliar para ler um inteiro com validação
+int lerInteiroBetween(const char *mensagem, int min, int max) {
     int valor;
     char c;
     while (1) {
@@ -517,7 +555,7 @@ void menuJogo(){
         if(numPowers > 0) printf("2 - Usar Especial\n");
         printf("9 - Reiniciar\n");
         printf("0 - Finalizar\n");
-        scanf("%d", &selectMenu);
+        selectMenu = lerInteiro("");
         printf("\n");
 
         switch (selectMenu){
@@ -526,8 +564,9 @@ void menuJogo(){
                     printf("Você não tem tiros suficientes");
                     break;
                 }
-                Y = lerInteiro("Linha: ", 0, tamLinha - 1);
-                X = lerInteiro("Coluna: ", 0, tamColuna - 1);
+                Y = lerInteiroBetween("Linha: ", 0, tamLinha - 1);
+                X = lerInteiroBetween("Coluna: ", 0, tamColuna - 1);
+                printf("\n");
                 tiroSimples(Y,X);
                 break;
 
@@ -541,19 +580,20 @@ void menuJogo(){
                 printf("2 - Losangulo\n");
                 printf("3 - Cruz\n");
                 printf("0 - Cancelar\n");
-                superpoder = lerInteiro("Opção: ", 0, 3);
+                superpoder = lerInteiroBetween("Opção: ", 0, 3);
                 if(superpoder == 0) break;
 
                 printf("\nDefina o ponto central:\n");
-                Y = lerInteiro("Linha: ", 0, tamLinha - 1);
-                X = lerInteiro("Coluna: ", 0, tamColuna - 1);
-                tamanho = lerInteiro("Tamanho (1 ou 2): ", 1, 2);
+                Y = lerInteiroBetween("Linha: ", 0, tamLinha - 1);
+                X = lerInteiroBetween("Coluna: ", 0, tamColuna - 1);
+                tamanho = lerInteiroBetween("Tamanho (1 ou 2): ", 1, 2);
 
+                printf("\n");
                 initAttackSuper(superpoder, X, Y, tamanho);
                 break;
 
             case 9:
-                confirma = lerInteiro("Você tem certeza que deseja reiniciar o jogo? \n1 - Sim \n2 - Não\n", 1, 2);
+                confirma = lerInteiroBetween("Você tem certeza que deseja reiniciar o jogo? \n1 - Sim \n2 - Não\n", 1, 2);
                 if(confirma == 2) break;
                 inicializarTabuleiro();
                 addNavioRandom();
@@ -561,7 +601,7 @@ void menuJogo(){
                 break;
             
             case 0: 
-                confirma = lerInteiro("Você tem certeza que deseja encerrar o jogo? \n1 - Sim \n2 - Não\n", 1, 2);
+                confirma = lerInteiroBetween("Você tem certeza que deseja encerrar o jogo? \n1 - Sim \n2 - Não\n", 1, 2);
                 if(confirma == 2) selectMenu = -1;
                 break;
             
@@ -576,7 +616,6 @@ void menuJogo(){
     
     // Se o jogo acabou sem o usuário pedir pra finalizar, mostrar os resultados
     if(selectMenu != 0){
-        int exit=0;
 
         system("clear");
         printTabuleiro();
@@ -585,10 +624,7 @@ void menuJogo(){
         if(qtdNaviosAtivos > 0) printf("\nVocê perdeu! =/\n");
         if(qtdNaviosAtivos <= 0) printf("\nParabéns! Você venceu!\n");
 
-        do{
-        printf("\nPressione 1 para continuar...");
-        scanf("%d", &exit);
-        } while (exit != 1); 
+        int exit = lerInteiro("Digite 1 para continuar... ");
     }
     
     menuPrincipal();
@@ -614,7 +650,7 @@ void menuPrincipal(){
             "1 - Iniciar Jogo\n"
             "0 - Finalizar\n");
 
-        scanf("%d", &selectMenu);
+        selectMenu = lerInteiro("");
         printf("\n");
 
         switch (selectMenu){

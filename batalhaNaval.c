@@ -368,12 +368,12 @@ int attack(int linha, int coluna){
     int hit = 0; // se acertou um navio se torna 1
 
     if(linha < 0 || coluna < 0 || linha >= tamLinha || coluna >= tamColuna){
-        printf("Fora do tabuleiro!\n");
+        printf("\Fora do tabuleiro\n");
         return 0;
     }
     
     if(tabuleiro[linha][coluna] != '~'){
-        printf("Alvo repetido. Tiro desperdiçado!\n");
+        printf("Alvo repetido. Tiro desperdiçado.\n");
         return 1;
     }
 
@@ -388,14 +388,14 @@ int attack(int linha, int coluna){
 
         //Verifica se o navio foi destruído
         if(checkNavioDestruido(linha, coluna)) {
-            printf("NAVIO DESTRUIDO!\n");
+            printf(RED"NAVIO DESTRUIDO!\n"RESETCOLOR);
             qtdNaviosAtivos--;
             revelaNavioDestruido(linha, coluna);
         }
     
     } else{
         tabuleiro[linha][coluna] = '*';
-        printf("Tiro na água!\n");
+        printf("Tiro na água\n");
         return 1;
     }
     
@@ -507,6 +507,7 @@ void menuJogo(){
     int selectMenu=-1;
     int tamanho=-1, X=-1, Y=-1, direcao=-1;
     int qtdNavios=-1, superpoder=-1;
+    char confirma=-1;
 
     do{
         system("clear");
@@ -543,7 +544,7 @@ void menuJogo(){
                 superpoder = lerInteiro("Opção: ", 0, 3);
                 if(superpoder == 0) break;
 
-                printf("Defina o ponto central:\n");
+                printf("\nDefina o ponto central:\n");
                 Y = lerInteiro("Linha: ", 0, tamLinha - 1);
                 X = lerInteiro("Coluna: ", 0, tamColuna - 1);
                 tamanho = lerInteiro("Tamanho (1 ou 2): ", 1, 2);
@@ -552,12 +553,16 @@ void menuJogo(){
                 break;
 
             case 9:
+                confirma = lerInteiro("Você tem certeza que deseja reiniciar o jogo? \n1 - Sim \n2 - Não\n", 1, 2);
+                if(confirma == 2) break;
                 inicializarTabuleiro();
                 addNavioRandom();
                 system("clear");
                 break;
             
             case 0: 
+                confirma = lerInteiro("Você tem certeza que deseja encerrar o jogo? \n1 - Sim \n2 - Não\n", 1, 2);
+                if(confirma == 2) selectMenu = -1;
                 break;
             
             default:

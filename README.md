@@ -1,5 +1,17 @@
-# ⚠️ Importante!!!
-Você pode escolher qualquer um dos desafios para desenvolver. Sinta-se à vontade para começar pelo desafio que mais lhe interessa.
+# Batalha Naval em C
+Este jogo foi criado a partir de um trabalho da disciplina da Estácio de Introdução à Programação de Computadores.
+Além do que foi pedido, resolvi implementar diversas outras funcionalidades como:
+- **Menu do Jogo**
+- **Adicionar navios no mapa de forma aleatória a cada rodada**
+- **Atacar navios** (quantidade de tiros limitados por rodada)
+- **Buscar um navio**, dado uma posição x,y, retornando seu ID, tamanho e posicionamento no tabuleiro
+- **Verificar se um navio foi destruido**, quando é atacado
+- Ao atingir a água, **mostrar um número que revela quantos alvos existem ao redor**
+- **Atacar várias posições ao mesmo tempo com poderes especiais** em formas geométricas de diversos tamanhos
+
+O texto abaixo contém a descrição do trabalho. 
+
+---
 
 # Desafio Batalha Naval - Três Níveis de Complexidade
 
